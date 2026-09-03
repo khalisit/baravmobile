@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "747424875838",
+    "project_id": "barav-quiz",
+    "storage_bucket": "barav-quiz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:747424875838:android:3942b90fddd00f282ed86f",
+        "android_client_info": {
+          "package_name": "com.benaapp.baravquiz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "747424875838-4djqb7ibtg2s4pogokkp1tjdlmv3ca69.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.benaapp.baravquiz",
+            "certificate_hash": "c9f72e92d881967f091ca0aaca46a8279e506788"
+          }
+        },
+        {
+          "client_id": "747424875838-ijat7mc0np6vi87rgrtsghkuso9duggu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.benaapp.baravquiz",
+            "certificate_hash": "b1d252a9b02a1c9991c0820eb1af9ce09765c167"
+          }
+        },
+        {
+          "client_id": "747424875838-6mqn0tqkqihifr4u6u14l3rse2na1bfc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKzpJKiNyDxRviHng4ZSk-3Dtb7-ChXh4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "747424875838-6mqn0tqkqihifr4u6u14l3rse2na1bfc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "747424875838-rilvl748tvfh8p9k61ii4iaot42f8nec.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.karoxkhalis.baravQuiz"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
