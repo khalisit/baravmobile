@@ -1,3 +1,5 @@
+// ignore_for_file: await_only_futures
+
 import 'package:flutter/material.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -33,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   bool _passwordVisible = false;
-  bool _loading = false;
+  String _loadingState = 'none'; // 'none', 'password', 'google', 'apple'
   bool _dialectPromptShown = false;
 
   @override
@@ -78,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handlePasswordLogin() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    setState(() => _loading = true);
+    setState(() => _loadingState = 'password');
     try {
       String identifier = _identifierController.text.trim();
       if (identifier.startsWith('0') &&
@@ -96,14 +98,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       _showErrorDialog(e.toString().replaceAll('Exception: ', ''));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _loadingState = 'none');
     }
   }
 
   // ── Social Providers Auth ──────────────────────────────────────────────────
 
   Future<void> _handleProviderLogin(SocialProvider provider) async {
-    setState(() => _loading = true);
+    setState(() => _loadingState = provider.name);
     try {
       UserCredential? userCredential;
 
@@ -112,15 +114,11 @@ class _LoginScreenState extends State<LoginScreen> {
         try {
           gUser = await GoogleSignIn.instance.authenticate();
         } catch (e) {
-          setState(() => _loading = false);
-          _showErrorDialog(
-            _isSorani
-                ? "هەڵە لە چوونەژوورەوەی گۆگڵ: $e"
-                : "Google Login Error: $e",
-          );
+          setState(() => _loadingState = 'none');
+          _showErrorDialog(e.toString());
           return;
         }
-        final GoogleSignInAuthentication gAuth = gUser.authentication;
+        final GoogleSignInAuthentication gAuth = await gUser.authentication;
         final credential = GoogleAuthProvider.credential(
           idToken: gAuth.idToken,
         );
@@ -182,13 +180,53 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       _showErrorDialog(e.toString());
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _loadingState = 'none');
     }
+  }
+
+  String _translateError(String error) {
+    final e = error.toLowerCase();
+    if (e.contains('user-not-found')) {
+      return _isSorani
+          ? 'هیچ هەژمارێک بەم زانیاریانە نەدۆزرایەوە.'
+          : 'Tu hesab bi van agahiyan nehat dîtin.';
+    }
+    if (e.contains('wrong-password') || e.contains('invalid-credential')) {
+      return _isSorani
+          ? 'زانیارییەکان هەڵەن، تکایە دڵنیابەرەوە.'
+          : 'Agahî çewt in, ji kerema xwe piştrast be.';
+    }
+    if (e.contains('network-request-failed')) {
+      return _isSorani
+          ? 'کێشە لە هێڵی ئینتەرنێت هەیە.'
+          : 'Pirsgirêka înternetê heye.';
+    }
+    if (e.contains('too-many-requests')) {
+      return _isSorani
+          ? 'هەوڵێکی زۆر دراوە، تکایە دواتر هەوڵبدەرەوە.'
+          : 'Gelek hewildan hatin kirin, ji kerema xwe paşê hewl bide.';
+    }
+    if (e.contains('canceled') || e.contains('cancelled')) {
+      return _isSorani ? 'پرۆسەکە هەڵوەشێنرایەوە.' : 'Pêvajo hate betal kirin.';
+    }
+    if (e.contains('invalid-phone-number')) {
+      return _isSorani
+          ? 'ژمارەی مۆبایلەکە هەڵەیە.'
+          : 'Hejmara telefonê çewt e.';
+    }
+    if (e.contains('invalid-email')) {
+      return _isSorani ? 'ئیمەیڵەکە هەڵەیە.' : 'E-mail çewt e.';
+    }
+
+    return _isSorani
+        ? 'کێشەیەک ڕوویدا، تکایە دووبارە هەوڵبدەرەوە.'
+        : 'Kêşeyek çêbû, ji kerema xwe dîsa hewl bide.';
   }
 
   Future<void> _showErrorDialog(String message) async {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
+    final translatedMessage = _translateError(message);
 
     showDialog<void>(
       context: context,
@@ -221,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           content: Text(
-            message,
+            translatedMessage,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textMuted,
             ),
@@ -278,40 +316,56 @@ class _LoginScreenState extends State<LoginScreen> {
     required SocialProvider provider,
     required String text,
     required VoidCallback onTap,
+    required bool isLoading,
+    required bool isDisabled,
   }) {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
 
     return PressableScale(
-      onTap: onTap,
-      scale: 0.96,
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: colors.stroke),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _SocialGlyph(provider, color: colors.ink),
-            const SizedBox(width: 12),
-            Text(
-              text,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: colors.ink,
-                fontWeight: FontWeight.w600,
+      onTap: isDisabled ? null : onTap,
+      scale: isDisabled ? 1.0 : 0.96,
+      child: Opacity(
+        opacity: isDisabled && !isLoading ? 0.6 : 1.0,
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colors.stroke),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Center(
+            child: isLoading
+                ? SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(colors.ink),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _SocialGlyph(provider, color: colors.ink),
+                      const SizedBox(width: 12),
+                      Text(
+                        text,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: colors.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
@@ -330,19 +384,18 @@ class _LoginScreenState extends State<LoginScreen> {
         FadeSlideIn(
           delay: const Duration(milliseconds: 100),
           child: BaravTextField(
-            label: _isSorani
-                ? 'ناوی بەکارهێنەر یان مۆبایل'
-                : 'Navê bikarhêner an telefon',
-            hint: 'karoxit / 07501234567',
-            icon: Icons.person_outline_rounded,
+            label: _isSorani ? 'ژمارەی مۆبایل' : 'Hejmara telefonê',
+            hint: '07501234567',
+            icon: Icons.phone_outlined,
             controller: _identifierController,
             ltr: true,
+            keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.next,
             validator: (v) {
               if (v == null || v.trim().isEmpty) {
                 return _isSorani
-                    ? 'ناوی بەکارهێنەر یان مۆبایل بنووسە'
-                    : 'Bikarhêner an telefon binivîse';
+                    ? 'ژمارەی مۆبایل بنووسە'
+                    : 'Hejmara telefonê binivîse';
               }
               return null;
             },
@@ -384,8 +437,8 @@ class _LoginScreenState extends State<LoginScreen> {
           delay: const Duration(milliseconds: 200),
           child: BaravButton(
             label: _isSorani ? 'چوونە ژوورەوە' : 'Têketin',
-            onPressed: _loading ? null : _handlePasswordLogin,
-            loading: _loading,
+            onPressed: _loadingState != 'none' ? null : _handlePasswordLogin,
+            loading: _loadingState == 'password',
             height: fit(46, 50),
           ),
         ),
@@ -446,6 +499,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   provider: SocialProvider.google,
                   text: 'Google',
                   onTap: () => _handleProviderLogin(SocialProvider.google),
+                  isLoading: _loadingState == SocialProvider.google.name,
+                  isDisabled: _loadingState != 'none',
                 ),
               ),
               if (theme.platform != TargetPlatform.android) ...[
@@ -455,6 +510,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     provider: SocialProvider.apple,
                     text: 'Apple',
                     onTap: () => _handleProviderLogin(SocialProvider.apple),
+                    isLoading: _loadingState == SocialProvider.apple.name,
+                    isDisabled: _loadingState != 'none',
                   ),
                 ),
               ],
