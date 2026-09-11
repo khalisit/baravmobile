@@ -44,7 +44,7 @@ class AdService extends ChangeNotifier {
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     _watchCount = prefs.getInt(_prefKey) ?? 0;
-    debugPrint('[AdService] Loaded watch count: $_watchCount');
+    // debugPrint('[AdService] Loaded watch count: $_watchCount');
     notifyListeners();
     _preloadAd();
   }
@@ -61,13 +61,13 @@ class AdService extends ChangeNotifier {
         onAdLoaded: (ad) {
           _rewardedAd = ad;
           _isLoading = false;
-          debugPrint('[AdService] Ad loaded successfully');
+          // debugPrint('[AdService] Ad loaded successfully');
           notifyListeners();
         },
         onAdFailedToLoad: (error) {
           _rewardedAd = null;
           _isLoading = false;
-          debugPrint('[AdService] Ad failed to load: $error');
+          // debugPrint('[AdService] Ad failed to load: $error');
           notifyListeners();
         },
       ),
@@ -120,13 +120,13 @@ class AdService extends ChangeNotifier {
       // هەڵی نوێ وەردەگیرێت
       _watchCount = 0;
       await prefs.setInt(_prefKey, 0);
-      debugPrint('[AdService] Earned a skip! Calling API...');
+      // debugPrint('[AdService] Earned a skip! Calling API...');
       notifyListeners();
       await _addSkipViaApi();
       onEarned();
     } else {
       await prefs.setInt(_prefKey, _watchCount);
-      debugPrint('[AdService] Watch count: $_watchCount/$_adsRequiredForSkip');
+      // debugPrint('[AdService] Watch count: $_watchCount/$_adsRequiredForSkip');
       notifyListeners();
     }
   }
@@ -141,9 +141,9 @@ class AdService extends ChangeNotifier {
 
       final newSkip = await ApiService.addSkip(user.id, token);
       session.updateSkipLocal(newSkip);
-      debugPrint('[AdService] Skip added. New total: $newSkip');
+      // debugPrint('[AdService] Skip added. New total: $newSkip');
     } catch (e) {
-      debugPrint('[AdService] Failed to add skip via API: $e');
+      // debugPrint('[AdService] Failed to add skip via API: $e');
     }
   }
 

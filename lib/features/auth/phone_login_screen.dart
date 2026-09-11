@@ -90,8 +90,6 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     FocusScope.of(context).unfocus();
     setState(() => _loading = true);
     try {
-      await ApiService.sendOtp(_fullPhone);
-
       if (!mounted) return;
       setState(() => _loading = false);
       Navigator.of(context).push(
@@ -151,6 +149,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           gUser = await GoogleSignIn.instance.authenticate();
         } catch (e) {
           setState(() => _loading = false);
+          if (e.toString().toLowerCase().contains('cancel')) {
+            return;
+          }
           _showError(
             _isSorani
                 ? "هەڵە لە چوونەژوورەوەی گۆگڵ: $e"
@@ -159,6 +160,13 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           return;
         }
         final GoogleSignInAuthentication gAuth = gUser.authentication;
+        if (gAuth.idToken == null) {
+          throw Exception(
+            _isSorani
+                ? 'ناسنامەی گۆگڵ دەستنەکەوت (ID Token null)'
+                : 'Google ID token not found',
+          );
+        }
         final credential = GoogleAuthProvider.credential(
           idToken: gAuth.idToken,
         );
@@ -214,9 +222,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       } else {
         Navigator.of(context).pushReplacement(fadeRoute(const MainShell()));
       }
-    } catch (e, stackTrace) {
-      debugPrint('--- [FB LOGIN] ERROR CAUGHT: $e ---');
-      debugPrint('--- [FB LOGIN] STACKTRACE: $stackTrace ---');
+    } catch (e) {
+      // debugPrint('--- [FB LOGIN] ERROR CAUGHT: $e ---');
+      // debugPrint('--- [FB LOGIN] STACKTRACE: $stackTrace ---');
       if (!mounted) return;
       _showError(e.toString());
     } finally {
@@ -561,7 +569,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                                 Expanded(
                                                   child: TextField(
                                                     controller: _phoneCtrl,
-                                                    keyboardType: TextInputType.phone,
+                                                    keyboardType: TextInputType.number,
                                                     textDirection: TextDirection.ltr,
                                                     textInputAction:
                                                         TextInputAction.next,

@@ -489,175 +489,192 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             ),
                           ),
                           IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: colors.surface,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(28),
-                                        ),
-                                      ),
-                                      builder: (ctx) => SizedBox(
-                                        height:
-                                            MediaQuery.of(context).size.height * 0.6,
-                                        child: Column(
-                                          children: [
-                                            const SizedBox(height: 10),
-                                            Container(
-                                              width: 40,
-                                              height: 5,
-                                              decoration: BoxDecoration(
-                                                color: colors.stroke,
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.all(20),
-                                              child: Text(
-                                                isSorani
-                                                    ? 'وڵات هەڵبژێرە'
-                                                    : 'Welat hilbijêre',
-                                                style: Theme.of(ctx)
-                                                    .textTheme
-                                                    .titleLarge,
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: ListView.builder(
-                                                itemCount: _countries.length,
-                                                itemBuilder: (_, i) {
-                                                  final c = _countries[i];
-                                                  final selected = c.code ==
-                                                      _selectedCountry.code;
-                                                  return Material(
-                                                    color: Colors.transparent,
-                                                    child: ListTile(
-                                                      leading: Text(
-                                                        c.flag,
-                                                        style: const TextStyle(
-                                                          fontSize: 26,
-                                                        ),
-                                                      ),
-                                                      title: Text(
-                                                        isSorani
-                                                            ? c.nameKu
-                                                            : c.name,
-                                                      ),
-                                                      trailing: Text(
-                                                        c.code,
-                                                        style: TextStyle(
-                                                          color: colors.textMuted,
-                                                          fontFamily: 'monospace',
-                                                        ),
-                                                      ),
-                                                      selected: selected,
-                                                      selectedColor:
-                                                          AppColors.purpleLight,
-                                                      onTap: () {
-                                                        setState(
-                                                          () => _selectedCountry = c,
-                                                        );
-                                                        Navigator.of(ctx).pop();
-                                                      },
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: colors.surface,
-                                      borderRadius: BorderRadius.circular(18),
-                                      border: Border.all(color: colors.stroke),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          _selectedCountry.flag,
-                                          style: const TextStyle(fontSize: 22),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          _selectedCountry.code,
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            fontFamily: 'monospace',
+                            child: Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: colors.surface,
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(28),
                                           ),
                                         ),
-                                        const SizedBox(width: 4),
-                                        Icon(
-                                          Icons.expand_more_rounded,
-                                          color: colors.textMuted,
-                                          size: 18,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _phoneController,
-                                    keyboardType: TextInputType.phone,
-                                    textDirection: TextDirection.ltr,
-                                    textAlign: TextAlign.left,
-                                    textInputAction: TextInputAction.done,
-                                    onChanged: _onPhoneChanged,
-                                    validator: (v) {
-                                      if (v == null || v.trim().isEmpty) return AppStrings.requiredField;
-                                      if (_phoneTaken) return isSorani ? '❌ ئەم ژمارەیە پێشتر گیراوە' : '❌ Ev hejmar hatye girtin';
-                                      if (v.length < 9) return isSorani ? '❌ ژمارەکە زۆر کورتە' : '❌ Hejmar kurt e';
-                                      return null;
-                                    },
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      fontFamily: 'monospace',
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: '750 000 0000',
-                                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                                        color: colors.textFaint,
-                                      ),
-                                      prefixIcon: const Icon(
-                                        Icons.phone_outlined,
-                                      ),
-                                      suffixIcon: _isCheckingPhone
-                                          ? const Padding(
-                                              padding: EdgeInsets.all(12.0),
-                                              child: SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child: CircularProgressIndicator(strokeWidth: 2),
+                                        builder: (ctx) => SizedBox(
+                                          height:
+                                              MediaQuery.of(context).size.height * 0.6,
+                                          child: Column(
+                                            children: [
+                                              const SizedBox(height: 10),
+                                              Container(
+                                                width: 40,
+                                                height: 5,
+                                                decoration: BoxDecoration(
+                                                  color: colors.stroke,
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
                                               ),
-                                            )
-                                          : null,
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 17,
-                                        horizontal: 16,
+                                              Padding(
+                                                padding: const EdgeInsets.all(20),
+                                                child: Text(
+                                                  isSorani
+                                                      ? 'وڵات هەڵبژێرە'
+                                                      : 'Welat hilbijêre',
+                                                  style: Theme.of(ctx)
+                                                      .textTheme
+                                                      .titleLarge,
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: ListView.builder(
+                                                  itemCount: _countries.length,
+                                                  itemBuilder: (_, i) {
+                                                    final c = _countries[i];
+                                                    final selected = c.code ==
+                                                        _selectedCountry.code;
+                                                    return Material(
+                                                      color: Colors.transparent,
+                                                      child: ListTile(
+                                                        leading: Text(
+                                                          c.flag,
+                                                          style: const TextStyle(
+                                                            fontSize: 26,
+                                                          ),
+                                                        ),
+                                                        title: Text(
+                                                          isSorani
+                                                              ? c.nameKu
+                                                              : c.name,
+                                                        ),
+                                                        trailing: Text(
+                                                          c.code,
+                                                          style: TextStyle(
+                                                            color: colors.textMuted,
+                                                            fontFamily: 'monospace',
+                                                          ),
+                                                        ),
+                                                        selected: selected,
+                                                        selectedColor:
+                                                            AppColors.purpleLight,
+                                                        onTap: () {
+                                                          setState(
+                                                            () => _selectedCountry = c,
+                                                          );
+                                                          Navigator.of(ctx).pop();
+                                                        },
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
                                       ),
-                                      isDense: true,
+                                      decoration: BoxDecoration(
+                                        color: colors.surface,
+                                        borderRadius: BorderRadius.circular(18),
+                                        border: Border.all(color: colors.stroke),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _selectedCountry.flag,
+                                            style: const TextStyle(fontSize: 22),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            _selectedCountry.code,
+                                            style: theme.textTheme.bodyMedium?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Icon(
+                                            Icons.expand_more_rounded,
+                                            color: colors.textMuted,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _phoneController,
+                                      keyboardType: TextInputType.number,
+                                      textDirection: TextDirection.ltr,
+                                      textAlign: TextAlign.left,
+                                      textInputAction: TextInputAction.done,
+                                      onChanged: _onPhoneChanged,
+                                      validator: (v) {
+                                        if (v == null || v.trim().isEmpty) return AppStrings.requiredField;
+                                        if (_phoneTaken) return isSorani ? '❌ ئەم ژمارەیە پێشتر گیراوە' : '❌ Ev hejmar hatye girtin';
+                                        if (v.length < 9) return isSorani ? '❌ ژمارەکە زۆر کورتە' : '❌ Hejmar kurt e';
+                                        return null;
+                                      },
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      style: theme.textTheme.bodyLarge?.copyWith(
+                                        fontFamily: 'monospace',
+                                      ),
+                                      decoration: InputDecoration(
+                                        hintText: '750 000 0000',
+                                        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                                          color: colors.textFaint,
+                                        ),
+                                        prefixIcon: const Icon(
+                                          Icons.phone_outlined,
+                                        ),
+                                        suffixIcon: _isCheckingPhone
+                                            ? const Padding(
+                                                padding: EdgeInsets.all(12.0),
+                                                child: SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                                ),
+                                              )
+                                            : null,
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          vertical: 17,
+                                          horizontal: 16,
+                                        ),
+                                        isDense: true,
+                                        filled: true,
+                                        fillColor: colors.surface,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                          borderSide: BorderSide(color: colors.stroke),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                          borderSide: BorderSide(color: colors.stroke),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                          borderSide: BorderSide(color: AppColors.purple),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           if (_isCheckingPhone)

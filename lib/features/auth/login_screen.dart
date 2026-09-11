@@ -1,6 +1,7 @@
 // ignore_for_file: await_only_futures
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -110,21 +111,52 @@ class _LoginScreenState extends State<LoginScreen> {
       UserCredential? userCredential;
 
       if (provider == SocialProvider.google) {
-        GoogleSignInAccount? gUser;
         try {
-          gUser = await GoogleSignIn.instance.authenticate();
-        } catch (e) {
-          setState(() => _loadingState = 'none');
-          _showErrorDialog(e.toString());
+          debugPrint('=== GOOGLE LOGIN START ===');
+
+          final GoogleSignInAccount gUser = await GoogleSignIn.instance
+              .authenticate();
+
+          debugPrint('Google user: ${gUser.email}');
+          debugPrint('Google user id: ${gUser.id}');
+
+          final GoogleSignInAuthentication gAuth = await gUser.authentication;
+
+          debugPrint('Google idToken exists: ${gAuth.idToken != null}');
+          debugPrint('Google idToken length: ${gAuth.idToken?.length ?? 0}');
+
+          if (gAuth.idToken == null) {
+            throw Exception(
+              'Google ID Token is null. Check Google OAuth configuration.',
+            );
+          }
+
+          final credential = GoogleAuthProvider.credential(
+            idToken: gAuth.idToken,
+          );
+
+          debugPrint('Firebase credential created');
+
+          userCredential = await FirebaseAuth.instance.signInWithCredential(
+            credential,
+          );
+
+          debugPrint('Firebase user: ${userCredential.user?.uid}');
+          debugPrint('Firebase email: ${userCredential.user?.email}');
+        } catch (e, stackTrace) {
+          debugPrint('=== GOOGLE LOGIN ERROR ===');
+          debugPrint('ERROR: $e');
+          debugPrint('STACK: $stackTrace');
+
+          if (mounted) {
+            setState(() => _loadingState = 'none');
+            if (!e.toString().toLowerCase().contains('cancel')) {
+              _showErrorDialog(e.toString());
+            }
+          }
+
           return;
         }
-        final GoogleSignInAuthentication gAuth = await gUser.authentication;
-        final credential = GoogleAuthProvider.credential(
-          idToken: gAuth.idToken,
-        );
-        userCredential = await FirebaseAuth.instance.signInWithCredential(
-          credential,
-        );
       } else if (provider == SocialProvider.apple) {
         final appleProvider = OAuthProvider('apple.com');
         userCredential = await FirebaseAuth.instance.signInWithProvider(
@@ -174,9 +206,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         Navigator.of(context).pushReplacement(fadeRoute(const MainShell()));
       }
-    } catch (e, stackTrace) {
-      debugPrint('--- [FB LOGIN] ERROR CAUGHT: $e ---');
-      debugPrint('--- [FB LOGIN] STACKTRACE: $stackTrace ---');
+    } catch (e) {
+      // debugPrint('--- [FB LOGIN] ERROR CAUGHT: $e ---');
+      // debugPrint('--- [FB LOGIN] STACKTRACE: $stackTrace ---');
       if (!mounted) return;
       _showErrorDialog(e.toString());
     } finally {
@@ -186,15 +218,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String _translateError(String error) {
     final e = error.toLowerCase();
-    if (e.contains('user-not-found')) {
-      return _isSorani
-          ? 'هیچ هەژمارێک بەم زانیاریانە نەدۆزرایەوە.'
-          : 'Tu hesab bi van agahiyan nehat dîtin.';
+    if (e.contains('user not found') || e.contains('user-not-found')) {
+      return _isSorani ? 'ئەم ژمارەیە بوونی نییە' : 'Ev hejmar tune ye.';
     }
-    if (e.contains('wrong-password') || e.contains('invalid-credential')) {
-      return _isSorani
-          ? 'زانیارییەکان هەڵەن، تکایە دڵنیابەرەوە.'
-          : 'Agahî çewt in, ji kerema xwe piştrast be.';
+    if (e.contains('incorrect password') ||
+        e.contains('wrong-password') ||
+        e.contains('invalid-credential') ||
+        e.contains('invalid credentials')) {
+      return _isSorani ? 'تێپەڕی وشە هەڵەیە' : 'Şîfre çewt e.';
     }
     if (e.contains('network-request-failed')) {
       return _isSorani
@@ -389,7 +420,8 @@ class _LoginScreenState extends State<LoginScreen> {
             icon: Icons.phone_outlined,
             controller: _identifierController,
             ltr: true,
-            keyboardType: TextInputType.phone,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textInputAction: TextInputAction.next,
             validator: (v) {
               if (v == null || v.trim().isEmpty) {

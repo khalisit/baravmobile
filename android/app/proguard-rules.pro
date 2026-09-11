@@ -28,9 +28,14 @@
 -keep class com.google.firebase.** { *; }
 -dontwarn com.google.firebase.**
 
-# Google Sign In
+# Google Sign In (Legacy & Credential Manager for google_sign_in 7.x)
 -keep class com.google.android.gms.auth.api.signin.** { *; }
 -dontwarn com.google.android.gms.auth.api.signin.**
+-keep class androidx.credentials.** { *; }
+-dontwarn androidx.credentials.**
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-dontwarn com.google.android.libraries.identity.googleid.**
+
 
 # Desugaring
 -keep class java.time.** { *; }
