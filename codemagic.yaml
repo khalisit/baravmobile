@@ -29,12 +29,80 @@ workflows:
         script: |
           xcode-project use-profiles
 
+      - name: Verify code signing
+        script: |
+          echo "========================================"
+          echo "=== CODE SIGNING IDENTITIES ==="
+          echo "========================================"
+
+          security find-identity -v -p codesigning || true
+
+          echo ""
+          echo "========================================"
+          echo "=== PROVISIONING PROFILES ==="
+          echo "========================================"
+
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+
+          if [ -d "$PROFILE_DIR" ]; then
+            for f in "$PROFILE_DIR"/*.mobileprovision; do
+              [ -e "$f" ] || continue
+
+              echo ""
+              echo "---- PROFILE: $f ----"
+
+              security cms -D -i "$f" > /tmp/profile.plist
+
+              echo "Name:"
+              /usr/libexec/PlistBuddy \
+                -c "Print :Name" \
+                /tmp/profile.plist 2>/dev/null || true
+
+              echo "UUID:"
+              /usr/libexec/PlistBuddy \
+                -c "Print :UUID" \
+                /tmp/profile.plist 2>/dev/null || true
+
+              echo "Application Identifier:"
+              /usr/libexec/PlistBuddy \
+                -c "Print :Entitlements:application-identifier" \
+                /tmp/profile.plist 2>/dev/null || true
+
+              echo "Team Identifier:"
+              /usr/libexec/PlistBuddy \
+                -c "Print :Entitlements:com.apple.developer.team-identifier" \
+                /tmp/profile.plist 2>/dev/null || true
+
+              echo "Expiration:"
+              /usr/libexec/PlistBuddy \
+                -c "Print :ExpirationDate" \
+                /tmp/profile.plist 2>/dev/null || true
+            done
+          else
+            echo "Provisioning Profiles directory not found!"
+          fi
+
+          echo ""
+          echo "========================================"
+          echo "=== XCODE SIGNING SETTINGS ==="
+          echo "========================================"
+
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -showBuildSettings 2>/dev/null |
+            grep -E \
+            'PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM|CODE_SIGN_STYLE|CODE_SIGN_IDENTITY|PROVISIONING_PROFILE|PROVISIONING_PROFILE_SPECIFIER' \
+            || true
+
       - name: Build signed IPA
         script: |
           flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
