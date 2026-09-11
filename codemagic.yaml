@@ -98,7 +98,56 @@ workflows:
 
       - name: Build signed IPA
         script: |
-          flutter build ipa --release
+          cat > /tmp/ExportOptions.plist <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+
+              <key>signingStyle</key>
+              <string>manual</string>
+
+              <key>teamID</key>
+              <string>7DQT2644US</string>
+
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.benaapp.baravquiz</key>
+                  <string>Barav Quiz ios_app_store 1788542603</string>
+              </dict>
+
+              <key>stripSwiftSymbols</key>
+              <true/>
+
+              <key>uploadBitcode</key>
+              <false/>
+
+              <key>compileBitcode</key>
+              <false/>
+
+              <key>destination</key>
+              <string>export</string>
+          </dict>
+          </plist>
+          EOF
+
+          echo "========================================"
+          echo "=== EXPORT OPTIONS ==="
+          echo "========================================"
+
+          cat /tmp/ExportOptions.plist
+
+          echo ""
+          echo "========================================"
+          echo "=== BUILD IPA ==="
+          echo "========================================"
+
+          flutter build ipa \
+            --release \
+            --export-options-plist=/tmp/ExportOptions.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
