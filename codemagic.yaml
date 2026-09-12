@@ -154,20 +154,7 @@ workflows:
       - build/ios/archive/*.xcarchive
       - /tmp/xcodebuild_logs/*.log
 
-    # ========================================
-    # PRODUCTION PUBLISHING
-    # ========================================
-    #
-    # App Store / TestFlight automatic publishing
-    # intentionally disabled for now.
-    #
-    # publishing:
-    #   app_store_connect:
-    #     auth: integration
-    #     submit_to_testflight: true
-    #
-    # Later, when you want automatic App Store
-    # publishing, enable the publishing section
-    # and configure App Store submission/review.
-    #
-    # ========================================
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
