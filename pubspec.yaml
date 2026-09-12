@@ -1,8 +1,8 @@
 name: barav_quiz
-description: "BARAV QUIZ —  باراڤ کویز"
+description: "BARAV QUIZ — کویزی  باراڤ"
 publish_to: "none"
 
-version: 1.0.0+12
+version: 1.0.0+3
 
 environment:
   sdk: ^3.12.0

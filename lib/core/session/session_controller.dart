@@ -70,7 +70,7 @@ class SessionController extends ChangeNotifier {
         _user = UserProfile.fromMap(jsonDecode(cachedUserJson));
         _initializeUserSession();
       } catch (e) {
-        // debugPrint('Failed to load cached user: $e');
+        debugPrint('Failed to load cached user: $e');
       }
     }
 
@@ -98,14 +98,14 @@ class SessionController extends ChangeNotifier {
           winnings: userData['quizzesWon'] ?? 0,
           quizzesPlayed: userData['quizzesPlayed'] ?? 0,
           totalRewards: userData['totalRewards'] ?? 0,
-          verifyPhone: userData['verifyPhone'] == true || userData['verifyPhone'] == 1 || userData['verify_phone'] == true || userData['verify_phone'] == 1,
+          verifyPhone: userData['verifyPhone'] ?? false,
         );
         _initializeUserSession();
         _startSessionRefreshTimer();
       } on UnauthorizedException {
         await signOut();
       } catch (e) {
-        // debugPrint('Failed to refresh user profile on load: $e');
+        debugPrint('Failed to refresh user profile on load: $e');
         if (_user != null) {
           _startSessionRefreshTimer();
         }
@@ -139,7 +139,7 @@ class SessionController extends ChangeNotifier {
         winnings: userData['quizzesWon'] ?? 0,
         quizzesPlayed: userData['quizzesPlayed'] ?? 0,
         totalRewards: userData['totalRewards'] ?? 0,
-        verifyPhone: userData['verifyPhone'] == true || userData['verifyPhone'] == 1 || userData['verify_phone'] == true || userData['verify_phone'] == 1,
+        verifyPhone: userData['verifyPhone'] ?? false,
       );
       _points = pointsFromDb;
       if (_user != null) {
@@ -152,7 +152,7 @@ class SessionController extends ChangeNotifier {
       await signOut();
       return false;
     } catch (e) {
-      // debugPrint('Failed to refresh session: $e');
+      debugPrint('Failed to refresh session: $e');
       return false;
     }
   }
@@ -187,7 +187,6 @@ class SessionController extends ChangeNotifier {
       winnings: userMap['quizzesWon'] ?? 0,
       quizzesPlayed: userMap['quizzesPlayed'] ?? 0,
       totalRewards: userMap['totalRewards'] ?? 0,
-      verifyPhone: userMap['verifyPhone'] == true || userMap['verifyPhone'] == 1 || userMap['verify_phone'] == true || userMap['verify_phone'] == 1,
     );
 
     if (userStatus == 'deleted') {
@@ -237,7 +236,6 @@ class SessionController extends ChangeNotifier {
       winnings: userMap['quizzesWon'] ?? 0,
       quizzesPlayed: userMap['quizzesPlayed'] ?? 0,
       totalRewards: userMap['totalRewards'] ?? 0,
-      verifyPhone: userMap['verifyPhone'] == true || userMap['verifyPhone'] == 1 || userMap['verify_phone'] == true || userMap['verify_phone'] == 1,
     );
 
     if (_token != null) await _prefs?.setString(_tokenKey, _token!);
@@ -280,7 +278,6 @@ class SessionController extends ChangeNotifier {
       winnings: userMap['quizzesWon'] ?? 0,
       quizzesPlayed: userMap['quizzesPlayed'] ?? 0,
       totalRewards: userMap['totalRewards'] ?? 0,
-      verifyPhone: userMap['verifyPhone'] == true || userMap['verifyPhone'] == 1 || userMap['verify_phone'] == true || userMap['verify_phone'] == 1,
     );
     await _prefs?.setString(_userKey, jsonEncode(_user!.toMap()));
 
@@ -338,7 +335,6 @@ class SessionController extends ChangeNotifier {
         lastUsernameChangedAt: _parseDateTime(userData['last_username_changed_at'] ?? userData['lastUsernameChangedAt']),
         lastNameChangedAt: _parseDateTime(userData['last_name_changed_at'] ?? userData['lastNameChangedAt']),
         avatarPath: finalAvatarUrl,
-        verifyPhone: userData['verifyPhone'] == true || userData['verifyPhone'] == 1 || userData['verify_phone'] == true || userData['verify_phone'] == 1 || _user!.verifyPhone,
       );
     } else {
       _user = _user?.copyWith(
@@ -387,7 +383,7 @@ class SessionController extends ChangeNotifier {
             _token!,
           );
         } catch (e) {
-          // debugPrint('Failed to upload avatar during registration: $e');
+          debugPrint('Failed to upload avatar during registration: $e');
         }
       }
     }
@@ -409,7 +405,6 @@ class SessionController extends ChangeNotifier {
       winnings: userMap['quizzesWon'] ?? 0,
       quizzesPlayed: userMap['quizzesPlayed'] ?? 0,
       totalRewards: userMap['totalRewards'] ?? 0,
-      verifyPhone: userMap['verifyPhone'] == true || userMap['verifyPhone'] == 1 || userMap['verify_phone'] == true || userMap['verify_phone'] == 1,
     );
 
     if (_token != null) {

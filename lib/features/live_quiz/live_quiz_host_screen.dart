@@ -363,12 +363,12 @@ class _QuestionViewState extends State<_QuestionView>
     final pointsNow = _pointsBeforeQuestion + awarded;
     final levelNow = PlayerProgress.forPoints(pointsNow).level;
 
-    // debugPrint("[LevelUpCheck] awarded=$awarded, pointsBefore=$_pointsBeforeQuestion, levelBefore=$_levelBeforeQuestion, pointsNow=$pointsNow, levelNow=$levelNow");
+    debugPrint("[LevelUpCheck] awarded=$awarded, pointsBefore=$_pointsBeforeQuestion, levelBefore=$_levelBeforeQuestion, pointsNow=$pointsNow, levelNow=$levelNow");
 
     _levelUpTo = -1;
     if (levelNow > _levelBeforeQuestion) {
       _levelUpTo = levelNow;
-      // debugPrint("[LevelUpCheck] Level Up Detected! _levelUpTo=$_levelUpTo");
+      debugPrint("[LevelUpCheck] Level Up Detected! _levelUpTo=$_levelUpTo");
       // Also consume any pending level-up flag so LevelUpPresenter won't double-play.
       session.consumePendingLevelUp();
     } else if (session.hasPendingLevelUp) {
@@ -376,16 +376,16 @@ class _QuestionViewState extends State<_QuestionView>
       final pending = session.consumePendingLevelUp();
       if (pending != null) {
         _levelUpTo = pending.to;
-        // debugPrint("[LevelUpCheck] Server Pending Level Up Detected! _levelUpTo=$_levelUpTo");
+        debugPrint("[LevelUpCheck] Server Pending Level Up Detected! _levelUpTo=$_levelUpTo");
       }
     }
 
     _sessionAccumulatedScore += awarded;
 
     _pointsPop.forward(from: 0).then((_) {
-      // debugPrint("[LevelUpCheck] _pointsPop finished. _levelUpTo=$_levelUpTo");
+      debugPrint("[LevelUpCheck] _pointsPop finished. _levelUpTo=$_levelUpTo");
       if (_levelUpTo > 0 && mounted) {
-        // debugPrint("[LevelUpCheck] Playing LevelUp Sound and starting _levelPop!");
+        debugPrint("[LevelUpCheck] Playing LevelUp Sound and starting _levelPop!");
         unawaited(LiveQuizAudio.instance.playLevelUp());
         _levelPop.forward(from: 0).then((_) {
           if (mounted) {
@@ -427,7 +427,7 @@ class _QuestionViewState extends State<_QuestionView>
     _pointsBeforeQuestion = SessionController.instance.points + _sessionAccumulatedScore;
     _levelBeforeQuestion = PlayerProgress.forPoints(_pointsBeforeQuestion).level;
 
-    // debugPrint("[LevelUpCheck] _bindQuestion index=$_boundQuestion, _pointsBeforeQuestion=$_pointsBeforeQuestion, _levelBeforeQuestion=$_levelBeforeQuestion, sessionPoints=${SessionController.instance.points}, sessionAccumScore=$_sessionAccumulatedScore");
+    debugPrint("[LevelUpCheck] _bindQuestion index=$_boundQuestion, _pointsBeforeQuestion=$_pointsBeforeQuestion, _levelBeforeQuestion=$_levelBeforeQuestion, sessionPoints=${SessionController.instance.points}, sessionAccumScore=$_sessionAccumulatedScore");
 
     if (animateEnter) {
       _enter.forward(from: 0);

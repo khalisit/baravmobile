@@ -10,7 +10,6 @@ import '../../core/widgets/glow_backdrop.dart';
 import '../../data/api_service.dart';
 import 'package:pinput/pinput.dart';
 import 'package:flutter/services.dart';
-import '../../core/utils/error_translator.dart';
 
 // ─── Country picker model ────────────────────────────────────────────────────
 class _Country {
@@ -75,9 +74,55 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return '${_selectedCountry.code}$_localPhone';
   }
 
-  void _showError(dynamic msg) {
-    if (!mounted) return;
-    ErrorTranslator.showDialogError(context, msg);
+  void _showError(String msg) {
+    final colors = AppColors.of(context);
+    final theme = Theme.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(color: colors.stroke),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              color: theme.colorScheme.error,
+              size: 26,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _isSorani ? 'کێشەیەک هەیە' : 'Pirsgirêkek heye',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colors.ink,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          msg,
+          style: theme.textTheme.bodyMedium?.copyWith(color: colors.textMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              _isSorani ? 'باشە' : 'Baş e',
+              style: TextStyle(
+                color: AppColors.purple,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────

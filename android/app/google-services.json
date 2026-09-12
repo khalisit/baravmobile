@@ -22,27 +22,11 @@
           }
         },
         {
-          "client_id": "747424875838-a3ir85fsk64519rrh9tb51bd4a4h1rj8.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.benaapp.baravquiz",
-            "certificate_hash": "42ca014caaf3d4b9049add23a0a0e5ae70084b52"
-          }
-        },
-        {
-          "client_id": "747424875838-a4323ibv48c36qfsrvqrrucntb78b0bj.apps.googleusercontent.com",
+          "client_id": "747424875838-ijat7mc0np6vi87rgrtsghkuso9duggu.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.benaapp.baravquiz",
             "certificate_hash": "b1d252a9b02a1c9991c0820eb1af9ce09765c167"
-          }
-        },
-        {
-          "client_id": "747424875838-u61q6nagftnr6of6dt78g47c2r1t4gh4.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.benaapp.baravquiz",
-            "certificate_hash": "b500bcd86cbd915be0ee73aabcfbcabdaa8e8147"
           }
         },
         {
@@ -63,11 +47,10 @@
               "client_type": 3
             },
             {
-              "client_id": "747424875838-5nqet3jm0t704vkh4jedc7g4l5b91kg3.apps.googleusercontent.com",
+              "client_id": "747424875838-rilvl748tvfh8p9k61ii4iaot42f8nec.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.benaapp.baravquiz",
-                "app_store_id": "6808238160"
+                "bundle_id": "com.karoxkhalis.baravQuiz"
               }
             }
           ]

@@ -187,36 +187,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : RefreshIndicator(
-                        onRefresh: _fetchNotifications,
-                        color: AppColors.purple,
-                        child: _items.isEmpty
-                            ? ListView(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                children: [
-                                  SizedBox(
-                                    height: MediaQuery.of(context).size.height * 0.6,
-                                    child: const _EmptyNotifications(),
-                                  ),
-                                ],
-                              )
-                            : ListView.separated(
-                                physics: const BouncingScrollPhysics(
-                                  parent: AlwaysScrollableScrollPhysics(),
-                                ),
-                                padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-                                itemCount: _items.length,
-                                separatorBuilder: (_, _) => const SizedBox(height: 6),
-                                itemBuilder: (context, index) {
-                                  return FadeSlideIn(
-                                    delay: Duration(milliseconds: 40 * index),
-                                    child: _NotificationTile(
-                                      notification: _items[index],
-                                      onTap: () => _openItem(index),
-                                    ),
-                                  );
-                                },
-                              ),
+                    : _items.isEmpty
+                    ? const _EmptyNotifications()
+                    : ListView.separated(
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+                        itemCount: _items.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 6),
+                        itemBuilder: (context, index) {
+                          return FadeSlideIn(
+                            delay: Duration(milliseconds: 40 * index),
+                            child: _NotificationTile(
+                              notification: _items[index],
+                              onTap: () => _openItem(index),
+                            ),
+                          );
+                        },
                       ),
               ),
             ],

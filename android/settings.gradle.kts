@@ -27,5 +27,3 @@ plugins {
 }
 
 include(":app")
-
-rootProject.name = "mobile_android"

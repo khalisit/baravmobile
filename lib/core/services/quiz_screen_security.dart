@@ -26,8 +26,8 @@ class QuizScreenSecurity {
       await _channel.invokeMethod<void>('enable');
       _active = true;
       _listenRecording();
-    } catch (e) {
-      // debugPrint('QuizScreenSecurity.enable failed: $e\n$st');
+    } catch (e, st) {
+      debugPrint('QuizScreenSecurity.enable failed: $e\n$st');
     }
   }
 
@@ -39,8 +39,8 @@ class QuizScreenSecurity {
       _recordingSub = null;
       await _channel.invokeMethod<void>('disable');
       _active = false;
-    } catch (e) {
-      // debugPrint('QuizScreenSecurity.disable failed: $e\n$st');
+    } catch (e, st) {
+      debugPrint('QuizScreenSecurity.disable failed: $e\n$st');
       _active = false;
     }
   }

@@ -1,17 +1,12 @@
-// ignore_for_file: await_only_futures
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../core/animation/fade_slide_in.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/localization/locale_controller.dart';
 import '../../core/routing/transitions.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/error_translator.dart';
 import '../../core/widgets/barav_logo.dart';
 import '../../core/widgets/dialect_picker_dialog.dart';
 import '../../core/widgets/glow_backdrop.dart';
@@ -38,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   bool _passwordVisible = false;
-  String _loadingState = 'none'; // 'none', 'password', 'google', 'apple'
+  bool _loading = false;
   bool _dialectPromptShown = false;
 
   @override
@@ -83,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handlePasswordLogin() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    setState(() => _loadingState = 'password');
+    setState(() => _loading = true);
     try {
       String identifier = _identifierController.text.trim();
       if (identifier.startsWith('0') &&
@@ -101,79 +96,41 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       _showErrorDialog(e.toString().replaceAll('Exception: ', ''));
     } finally {
-      if (mounted) setState(() => _loadingState = 'none');
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   // ── Social Providers Auth ──────────────────────────────────────────────────
 
   Future<void> _handleProviderLogin(SocialProvider provider) async {
-    setState(() => _loadingState = provider.name);
+    setState(() => _loading = true);
     try {
       UserCredential? userCredential;
 
       if (provider == SocialProvider.google) {
+        GoogleSignInAccount? gUser;
         try {
-          debugPrint('=== GOOGLE LOGIN START ===');
-
-          final GoogleSignInAccount gUser = await GoogleSignIn.instance
-              .authenticate();
-
-          debugPrint('Google user: ${gUser.email}');
-          debugPrint('Google user id: ${gUser.id}');
-
-          final GoogleSignInAuthentication gAuth = await gUser.authentication;
-
-          debugPrint('Google idToken exists: ${gAuth.idToken != null}');
-          debugPrint('Google idToken length: ${gAuth.idToken?.length ?? 0}');
-
-          if (gAuth.idToken == null) {
-            throw Exception(
-              'Google ID Token is null. Check Google OAuth configuration.',
-            );
-          }
-
-          final credential = GoogleAuthProvider.credential(
-            idToken: gAuth.idToken,
+          gUser = await GoogleSignIn.instance.authenticate();
+        } catch (e) {
+          setState(() => _loading = false);
+          _showErrorDialog(
+            _isSorani
+                ? "هەڵە لە چوونەژوورەوەی گۆگڵ: $e"
+                : "Google Login Error: $e",
           );
-
-          debugPrint('Firebase credential created');
-
-          userCredential = await FirebaseAuth.instance.signInWithCredential(
-            credential,
-          );
-
-          debugPrint('Firebase user: ${userCredential.user?.uid}');
-          debugPrint('Firebase email: ${userCredential.user?.email}');
-        } catch (e, stackTrace) {
-          debugPrint('=== GOOGLE LOGIN ERROR ===');
-          debugPrint('ERROR: $e');
-          debugPrint('STACK: $stackTrace');
-
-          if (mounted) {
-            setState(() => _loadingState = 'none');
-            if (!e.toString().toLowerCase().contains('cancel')) {
-              _showErrorDialog(e.toString());
-            }
-          }
-
           return;
         }
-      } else if (provider == SocialProvider.apple) {
-        final appleCredential = await SignInWithApple.getAppleIDCredential(
-          scopes: [
-            AppleIDAuthorizationScopes.email,
-            AppleIDAuthorizationScopes.fullName,
-          ],
+        final GoogleSignInAuthentication gAuth = gUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          idToken: gAuth.idToken,
         );
-
-        final oauthCredential = OAuthProvider('apple.com').credential(
-          idToken: appleCredential.identityToken,
-          accessToken: appleCredential.authorizationCode,
-        );
-
         userCredential = await FirebaseAuth.instance.signInWithCredential(
-          oauthCredential,
+          credential,
+        );
+      } else if (provider == SocialProvider.apple) {
+        final appleProvider = OAuthProvider('apple.com');
+        userCredential = await FirebaseAuth.instance.signInWithProvider(
+          appleProvider,
         );
       }
 
@@ -219,21 +176,66 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         Navigator.of(context).pushReplacement(fadeRoute(const MainShell()));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('--- [FB LOGIN] ERROR CAUGHT: $e ---');
+      debugPrint('--- [FB LOGIN] STACKTRACE: $stackTrace ---');
       if (!mounted) return;
-      if (e.toString().toLowerCase().contains('cancel') ||
-          e.toString().contains('1001')) {
-        return;
-      }
       _showErrorDialog(e.toString());
     } finally {
-      if (mounted) setState(() => _loadingState = 'none');
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _showErrorDialog(dynamic message) async {
-    if (!mounted) return;
-    await ErrorTranslator.showDialogError(context, message);
+  Future<void> _showErrorDialog(String message) async {
+    final colors = AppColors.of(context);
+    final theme = Theme.of(context);
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          backgroundColor: colors.surface,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: BorderSide(color: colors.stroke),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: theme.colorScheme.error,
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _isSorani ? 'کێشەیەک هەیە' : 'Pirsgirêkek heye',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.textMuted,
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text(_isSorani ? 'داخستن' : 'Girtin'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // ── Custom Social Button Builder ──────────────────────────────────────────
@@ -276,56 +278,40 @@ class _LoginScreenState extends State<LoginScreen> {
     required SocialProvider provider,
     required String text,
     required VoidCallback onTap,
-    required bool isLoading,
-    required bool isDisabled,
   }) {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
 
     return PressableScale(
-      onTap: isDisabled ? null : onTap,
-      scale: isDisabled ? 1.0 : 0.96,
-      child: Opacity(
-        opacity: isDisabled && !isLoading ? 0.6 : 1.0,
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: colors.stroke),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+      onTap: onTap,
+      scale: 0.96,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: colors.stroke),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _SocialGlyph(provider, color: colors.ink),
+            const SizedBox(width: 12),
+            Text(
+              text,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colors.ink,
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          ),
-          child: Center(
-            child: isLoading
-                ? SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(colors.ink),
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _SocialGlyph(provider, color: colors.ink),
-                      const SizedBox(width: 12),
-                      Text(
-                        text,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: colors.ink,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -344,19 +330,19 @@ class _LoginScreenState extends State<LoginScreen> {
         FadeSlideIn(
           delay: const Duration(milliseconds: 100),
           child: BaravTextField(
-            label: _isSorani ? 'ژمارەی مۆبایل' : 'Hejmara telefonê',
-            hint: '07501234567',
-            icon: Icons.phone_outlined,
+            label: _isSorani
+                ? 'ناوی بەکارهێنەر یان مۆبایل'
+                : 'Navê bikarhêner an telefon',
+            hint: 'karoxit / 07501234567',
+            icon: Icons.person_outline_rounded,
             controller: _identifierController,
             ltr: true,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textInputAction: TextInputAction.next,
             validator: (v) {
               if (v == null || v.trim().isEmpty) {
                 return _isSorani
-                    ? 'ژمارەی مۆبایل بنووسە'
-                    : 'Hejmara telefonê binivîse';
+                    ? 'ناوی بەکارهێنەر یان مۆبایل بنووسە'
+                    : 'Bikarhêner an telefon binivîse';
               }
               return null;
             },
@@ -398,8 +384,8 @@ class _LoginScreenState extends State<LoginScreen> {
           delay: const Duration(milliseconds: 200),
           child: BaravButton(
             label: _isSorani ? 'چوونە ژوورەوە' : 'Têketin',
-            onPressed: _loadingState != 'none' ? null : _handlePasswordLogin,
-            loading: _loadingState == 'password',
+            onPressed: _loading ? null : _handlePasswordLogin,
+            loading: _loading,
             height: fit(46, 50),
           ),
         ),
@@ -460,8 +446,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   provider: SocialProvider.google,
                   text: 'Google',
                   onTap: () => _handleProviderLogin(SocialProvider.google),
-                  isLoading: _loadingState == SocialProvider.google.name,
-                  isDisabled: _loadingState != 'none',
                 ),
               ),
               if (theme.platform != TargetPlatform.android) ...[
@@ -471,8 +455,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     provider: SocialProvider.apple,
                     text: 'Apple',
                     onTap: () => _handleProviderLogin(SocialProvider.apple),
-                    isLoading: _loadingState == SocialProvider.apple.name,
-                    isDisabled: _loadingState != 'none',
                   ),
                 ),
               ],

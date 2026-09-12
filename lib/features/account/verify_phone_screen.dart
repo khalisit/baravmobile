@@ -6,7 +6,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/barav_button.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/utils/kurdish_format.dart';
-import '../../core/utils/error_translator.dart';
 
 class VerifyPhoneScreen extends StatefulWidget {
   const VerifyPhoneScreen({super.key});
@@ -41,9 +40,22 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
     super.dispose();
   }
 
-  void _showErrorDialog(dynamic message) {
+  void _showErrorDialog(String message) {
     if (!mounted) return;
-    ErrorTranslator.showDialogError(context, message);
+    final isSorani = LocaleController.instance.isSorani;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isSorani ? 'هەڵە' : 'Çewtî'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(isSorani ? 'باشە' : 'Temam'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSuccessDialog() {

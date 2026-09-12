@@ -6,9 +6,7 @@ import 'core/localization/kurdish_material_localizations.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
-import 'core/session/session_controller.dart';
-import 'features/auth/login_screen.dart';
-import 'features/shell/main_shell.dart';
+import 'features/splash/splash_screen.dart';
 
 class BaravApp extends StatelessWidget {
   const BaravApp({super.key, this.themeController, this.localeController});
@@ -65,7 +63,7 @@ class BaravApp extends StatelessWidget {
               ),
             );
           },
-          home: SessionController.instance.isLoggedIn ? const MainShell() : const LoginScreen(),
+          home: const SplashScreen(),
         );
       },
     );

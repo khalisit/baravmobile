@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/animation/fade_slide_in.dart';
 import '../../core/localization/locale_controller.dart';
@@ -20,7 +19,6 @@ import '../shell/main_shell.dart';
 import 'complete_profile_screen.dart';
 import 'otp_verification_screen.dart';
 import '../../data/api_service.dart';
-import '../../core/utils/error_translator.dart';
 
 // ─── Country picker model ────────────────────────────────────────────────────
 
@@ -92,6 +90,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     FocusScope.of(context).unfocus();
     setState(() => _loading = true);
     try {
+      await ApiService.sendOtp(_fullPhone);
+
       if (!mounted) return;
       setState(() => _loading = false);
       Navigator.of(context).push(
@@ -151,20 +151,14 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           gUser = await GoogleSignIn.instance.authenticate();
         } catch (e) {
           setState(() => _loading = false);
-          if (e.toString().toLowerCase().contains('cancel')) {
-            return;
-          }
-          _showError(e);
+          _showError(
+            _isSorani
+                ? "هەڵە لە چوونەژوورەوەی گۆگڵ: $e"
+                : "Google Login Error: $e",
+          );
           return;
         }
         final GoogleSignInAuthentication gAuth = gUser.authentication;
-        if (gAuth.idToken == null) {
-          throw Exception(
-            _isSorani
-                ? 'ناسنامەی گۆگڵ دەستنەکەوت (ID Token null)'
-                : 'Google ID token not found',
-          );
-        }
         final credential = GoogleAuthProvider.credential(
           idToken: gAuth.idToken,
         );
@@ -172,20 +166,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           credential,
         );
       } else if (provider == SocialProvider.apple) {
-        final appleCredential = await SignInWithApple.getAppleIDCredential(
-          scopes: [
-            AppleIDAuthorizationScopes.email,
-            AppleIDAuthorizationScopes.fullName,
-          ],
-        );
-
-        final oauthCredential = OAuthProvider('apple.com').credential(
-          idToken: appleCredential.identityToken,
-          accessToken: appleCredential.authorizationCode,
-        );
-
-        userCredential = await FirebaseAuth.instance.signInWithCredential(
-          oauthCredential,
+        final appleProvider = OAuthProvider('apple.com');
+        userCredential = await FirebaseAuth.instance.signInWithProvider(
+          appleProvider,
         );
       }
 
@@ -231,21 +214,60 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       } else {
         Navigator.of(context).pushReplacement(fadeRoute(const MainShell()));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('--- [FB LOGIN] ERROR CAUGHT: $e ---');
+      debugPrint('--- [FB LOGIN] STACKTRACE: $stackTrace ---');
       if (!mounted) return;
-      if (e.toString().toLowerCase().contains('cancel') ||
-          e.toString().contains('1001')) {
-        return;
-      }
       _showError(e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _showError(dynamic msg) {
-    if (!mounted) return;
-    ErrorTranslator.showDialogError(context, msg);
+  void _showError(String msg) {
+    final colors = AppColors.of(context);
+    final theme = Theme.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(color: colors.stroke),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              color: theme.colorScheme.error,
+              size: 26,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _isSorani ? 'کێشەیەک هەیە' : 'Pirsgirêkek heye',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          msg,
+          style: theme.textTheme.bodyMedium?.copyWith(color: colors.textMuted),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(_isSorani ? 'داخستن' : 'Girtin'),
+          ),
+        ],
+      ),
+    );
   }
 
   // ── Country picker sheet ───────────────────────────────────────────────────
@@ -539,7 +561,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                                 Expanded(
                                                   child: TextField(
                                                     controller: _phoneCtrl,
-                                                    keyboardType: TextInputType.number,
+                                                    keyboardType: TextInputType.phone,
                                                     textDirection: TextDirection.ltr,
                                                     textInputAction:
                                                         TextInputAction.next,

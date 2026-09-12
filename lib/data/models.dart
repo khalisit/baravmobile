@@ -184,7 +184,7 @@ class UserProfile {
       winnings: map['winnings'] ?? 0,
       quizzesPlayed: map['quizzesPlayed'] ?? 0,
       totalRewards: map['totalRewards'] ?? 0,
-      verifyPhone: map['verify_phone'] == 1 || map['verify_phone'] == true || map['verifyPhone'] == true || map['verifyPhone'] == 1,
+      verifyPhone: map['verifyPhone'] ?? false,
     );
   }
 }

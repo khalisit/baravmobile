@@ -22,7 +22,7 @@ class PushNotificationService {
 
   static final PushNotificationService instance = PushNotificationService._();
 
-  static const String channelId = 'barav_quiz_push_v3';
+  static const String channelId = 'barav_quiz_push_v2';
   static const String channelName = 'BARAV QUIZ';
   static const String _promptedKey = 'push_permission_prompted';
   static const String _enabledKey = 'user_notifications_enabled';
@@ -127,7 +127,7 @@ class PushNotificationService {
       _deviceToken = null;
       _fcmInitialized = false;
     } catch (e) {
-      // debugPrint('Error on push notification signout: $e');
+      debugPrint('Error on push notification signout: $e');
     }
   }
 
@@ -199,7 +199,7 @@ class PushNotificationService {
         }
       }
     } catch (e) {
-      // debugPrint('Error initializing Firebase Messaging: $e');
+      debugPrint('Error initializing Firebase Messaging: $e');
     }
   }
 
@@ -227,7 +227,7 @@ class PushNotificationService {
         await fcm.deleteToken();
       }
     } catch (e) {
-      // debugPrint('Error setting notification preference: $e');
+      debugPrint('Error setting notification preference: $e');
     }
   }
 
@@ -399,7 +399,7 @@ class PushNotificationService {
           osVersion = 'iOS ${iosInfo.systemVersion}';
         }
       } catch (e) {
-        // debugPrint('Error getting device info: $e');
+        debugPrint('Error getting device info: $e');
       }
 
       final response = await http.post(
@@ -420,14 +420,14 @@ class PushNotificationService {
         }),
       );
       if (response.statusCode != 200) {
-        // debugPrint(
-        //  'Failed to sync device token: ${response.statusCode} ${response.body}',
-        // );
+        debugPrint(
+          'Failed to sync device token: ${response.statusCode} ${response.body}',
+        );
       } else {
-        // debugPrint('Successfully synced device token with backend');
+        debugPrint('Successfully synced device token with backend');
       }
     } catch (e) {
-      // debugPrint('Error syncing device token with backend: $e');
+      debugPrint('Error syncing device token with backend: $e');
     }
   }
 }
