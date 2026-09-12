@@ -96,7 +96,7 @@ workflows:
             'PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM|CODE_SIGN_STYLE|CODE_SIGN_IDENTITY|PROVISIONING_PROFILE|PROVISIONING_PROFILE_SPECIFIER' \
             || true
 
-      - name: Build signed IPA
+      - name: Build Production IPA
         script: |
           cat > /tmp/ExportOptions.plist <<'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
@@ -142,7 +142,7 @@ workflows:
 
           echo ""
           echo "========================================"
-          echo "=== BUILD IPA ==="
+          echo "=== BUILD PRODUCTION IPA ==="
           echo "========================================"
 
           flutter build ipa \
@@ -154,7 +154,20 @@ workflows:
       - build/ios/archive/*.xcarchive
       - /tmp/xcodebuild_logs/*.log
 
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
+    # ========================================
+    # PRODUCTION PUBLISHING
+    # ========================================
+    #
+    # App Store / TestFlight automatic publishing
+    # intentionally disabled for now.
+    #
+    # publishing:
+    #   app_store_connect:
+    #     auth: integration
+    #     submit_to_testflight: true
+    #
+    # Later, when you want automatic App Store
+    # publishing, enable the publishing section
+    # and configure App Store submission/review.
+    #
+    # ========================================
