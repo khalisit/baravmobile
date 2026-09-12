@@ -15,6 +15,7 @@ import '../../core/widgets/barav_text_field.dart';
 import '../../core/widgets/glow_backdrop.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/services/avatar_picker_service.dart';
+import '../../core/utils/error_translator.dart';
 import '../../data/api_service.dart';
 import '../shell/main_shell.dart';
 
@@ -197,7 +198,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.details ?? 'Failed to pick image'),
+          content: Text(
+            LocaleController.instance.isSorani
+                ? 'هەڵبژاردنی وێنە سەرکەوتوو نەبوو'
+                : 'Hilbijartina wêneyê bi ser neket',
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -240,13 +245,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       ).pushAndRemoveUntil(fadeRoute(const MainShell()), (route) => false);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceAll('Exception: ', '')),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      final errorMsg = ErrorTranslator.translate(e);
+      if (errorMsg.isNotEmpty) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

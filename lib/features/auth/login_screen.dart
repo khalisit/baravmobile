@@ -11,6 +11,7 @@ import '../../core/localization/app_strings.dart';
 import '../../core/localization/locale_controller.dart';
 import '../../core/routing/transitions.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/error_translator.dart';
 import '../../core/widgets/barav_logo.dart';
 import '../../core/widgets/dialect_picker_dialog.dart';
 import '../../core/widgets/glow_backdrop.dart';
@@ -230,95 +231,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  String _translateError(String error) {
-    final e = error.toLowerCase();
-    if (e.contains('user not found') || e.contains('user-not-found')) {
-      return _isSorani ? 'ئەم ژمارەیە بوونی نییە' : 'Ev hejmar tune ye.';
-    }
-    if (e.contains('incorrect password') ||
-        e.contains('wrong-password') ||
-        e.contains('invalid-credential') ||
-        e.contains('invalid credentials')) {
-      return _isSorani ? 'تێپەڕی وشە هەڵەیە' : 'Şîfre çewt e.';
-    }
-    if (e.contains('network-request-failed')) {
-      return _isSorani
-          ? 'کێشە لە هێڵی ئینتەرنێت هەیە.'
-          : 'Pirsgirêka înternetê heye.';
-    }
-    if (e.contains('too-many-requests')) {
-      return _isSorani
-          ? 'هەوڵێکی زۆر دراوە، تکایە دواتر هەوڵبدەرەوە.'
-          : 'Gelek hewildan hatin kirin, ji kerema xwe paşê hewl bide.';
-    }
-    if (e.contains('canceled') || e.contains('cancelled')) {
-      return _isSorani ? 'پرۆسەکە هەڵوەشێنرایەوە.' : 'Pêvajo hate betal kirin.';
-    }
-    if (e.contains('invalid-phone-number')) {
-      return _isSorani
-          ? 'ژمارەی مۆبایلەکە هەڵەیە.'
-          : 'Hejmara telefonê çewt e.';
-    }
-    if (e.contains('invalid-email')) {
-      return _isSorani ? 'ئیمەیڵەکە هەڵەیە.' : 'E-mail çewt e.';
-    }
-
-    return _isSorani
-        ? 'کێشەیەک ڕوویدا، تکایە دووبارە هەوڵبدەرەوە.'
-        : 'Kêşeyek çêbû, ji kerema xwe dîsa hewl bide.';
-  }
-
-  Future<void> _showErrorDialog(String message) async {
-    final colors = AppColors.of(context);
-    final theme = Theme.of(context);
-    final translatedMessage = _translateError(message);
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogCtx) {
-        return AlertDialog(
-          backgroundColor: colors.surface,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-            side: BorderSide(color: colors.stroke),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                color: theme.colorScheme.error,
-                size: 28,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  _isSorani ? 'کێشەیەک هەیە' : 'Pirsgirêkek heye',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    color: theme.colorScheme.error,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            translatedMessage,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colors.textMuted,
-            ),
-          ),
-          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: Text(_isSorani ? 'داخستن' : 'Girtin'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _showErrorDialog(dynamic message) async {
+    if (!mounted) return;
+    await ErrorTranslator.showDialogError(context, message);
   }
 
   // ── Custom Social Button Builder ──────────────────────────────────────────

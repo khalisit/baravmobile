@@ -20,6 +20,7 @@ import '../shell/main_shell.dart';
 import 'complete_profile_screen.dart';
 import 'otp_verification_screen.dart';
 import '../../data/api_service.dart';
+import '../../core/utils/error_translator.dart';
 
 // ─── Country picker model ────────────────────────────────────────────────────
 
@@ -153,11 +154,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           if (e.toString().toLowerCase().contains('cancel')) {
             return;
           }
-          _showError(
-            _isSorani
-                ? "هەڵە لە چوونەژوورەوەی گۆگڵ: $e"
-                : "Google Login Error: $e",
-          );
+          _showError(e);
           return;
         }
         final GoogleSignInAuthentication gAuth = gUser.authentication;
@@ -246,50 +243,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     }
   }
 
-  void _showError(String msg) {
-    final colors = AppColors.of(context);
-    final theme = Theme.of(context);
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colors.surface,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-          side: BorderSide(color: colors.stroke),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              color: theme.colorScheme.error,
-              size: 26,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                _isSorani ? 'کێشەیەک هەیە' : 'Pirsgirêkek heye',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.error,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          msg,
-          style: theme.textTheme.bodyMedium?.copyWith(color: colors.textMuted),
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(_isSorani ? 'داخستن' : 'Girtin'),
-          ),
-        ],
-      ),
-    );
+  void _showError(dynamic msg) {
+    if (!mounted) return;
+    ErrorTranslator.showDialogError(context, msg);
   }
 
   // ── Country picker sheet ───────────────────────────────────────────────────

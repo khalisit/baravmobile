@@ -7,6 +7,7 @@ import '../../core/routing/transitions.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/barav_button.dart';
 import '../../core/session/session_controller.dart';
+import '../../core/utils/error_translator.dart';
 import 'complete_profile_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -94,22 +95,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
   }
 
-  void _showErrorDialog(String message) {
+  void _showErrorDialog(dynamic message) {
     if (!mounted) return;
-    final isSorani = LocaleController.instance.isSorani;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isSorani ? 'هەڵە' : 'Çewtî'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(isSorani ? 'باشە' : 'Temam'),
-          ),
-        ],
-      ),
-    );
+    ErrorTranslator.showDialogError(context, message);
   }
 
   @override
