@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../core/animation/fade_slide_in.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/localization/locale_controller.dart';
@@ -158,11 +159,20 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
       } else if (provider == SocialProvider.apple) {
-        final appleProvider = OAuthProvider('apple.com')
-          ..addScope('email')
-          ..addScope('name');
-        userCredential = await FirebaseAuth.instance.signInWithProvider(
-          appleProvider,
+        final appleCredential = await SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+        );
+
+        final oauthCredential = OAuthProvider('apple.com').credential(
+          idToken: appleCredential.identityToken,
+          accessToken: appleCredential.authorizationCode,
+        );
+
+        userCredential = await FirebaseAuth.instance.signInWithCredential(
+          oauthCredential,
         );
       }
 
