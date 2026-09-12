@@ -55,6 +55,7 @@ class PushNotificationService {
 
     final prefs = await SharedPreferences.getInstance();
     _enabledSetting = prefs.getBool(_enabledKey) ?? true;
+    _deviceToken = prefs.getString('cached_device_fcm_token');
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
@@ -100,11 +101,7 @@ class PushNotificationService {
           );
     }
 
-    final cachedUserJson = prefs.getString('cached_user_profile');
-    final hasToken = prefs.getString('auth_token') != null;
-    if (cachedUserJson != null && cachedUserJson.isNotEmpty && hasToken) {
-      await _initFirebaseMessaging();
-    }
+    await _initFirebaseMessaging();
 
     _initialized = true;
   }
@@ -112,8 +109,10 @@ class PushNotificationService {
   Future<void> ensureInitialized() async {
     if (!_initialized) {
       await initialize();
-    } else {
+    } else if (!_fcmInitialized) {
       await _initFirebaseMessaging();
+    } else {
+      await syncDeviceTokenWithBackend();
     }
   }
 
@@ -190,13 +189,48 @@ class PushNotificationService {
       });
 
       if (_enabledSetting) {
+        if (Platform.isIOS) {
+          try {
+            await fcm.requestPermission(
+              alert: true,
+              badge: true,
+              sound: true,
+              provisional: false,
+            );
+            await fcm.setForegroundNotificationPresentationOptions(
+              alert: true,
+              badge: true,
+              sound: true,
+            );
+            String? apnsToken = await fcm.getAPNSToken();
+            int retries = 0;
+            while (apnsToken == null && retries < 10) {
+              await Future.delayed(const Duration(milliseconds: 500));
+              apnsToken = await fcm.getAPNSToken();
+              retries++;
+            }
+          } catch (_) {}
+        }
+
+        try {
+          final token = await fcm.getToken();
+          if (token != null) {
+            await registerDeviceToken(token);
+          }
+        } catch (e) {
+          Future.delayed(const Duration(seconds: 3), () async {
+            try {
+              final token = await fcm.getToken();
+              if (token != null) {
+                await registerDeviceToken(token);
+              }
+            } catch (_) {}
+          });
+        }
+
         try {
           await fcm.subscribeToTopic('all');
         } catch (_) {}
-        final token = await fcm.getToken();
-        if (token != null) {
-          await registerDeviceToken(token);
-        }
       }
     } catch (e) {
       // debugPrint('Error initializing Firebase Messaging: $e');
@@ -250,12 +284,13 @@ class PushNotificationService {
     }
 
     if (Platform.isIOS) {
-      final ios = _local
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >();
-      final options = await ios?.checkPermissions();
-      return options?.isEnabled ?? false;
+      try {
+        final settings = await FirebaseMessaging.instance.getNotificationSettings();
+        return settings.authorizationStatus == AuthorizationStatus.authorized ||
+            settings.authorizationStatus == AuthorizationStatus.provisional;
+      } catch (_) {
+        return false;
+      }
     }
 
     return false;
@@ -266,16 +301,27 @@ class PushNotificationService {
     if (!_initialized) await initialize();
 
     if (Platform.isIOS) {
-      final ios = _local
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >();
-      final granted = await ios?.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-      return granted ?? false;
+      try {
+        final settings = await FirebaseMessaging.instance.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+        );
+        final ios = _local
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+        await ios?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        return settings.authorizationStatus == AuthorizationStatus.authorized ||
+            settings.authorizationStatus == AuthorizationStatus.provisional;
+      } catch (_) {
+        return false;
+      }
     }
 
     final status = await Permission.notification.request();
@@ -363,6 +409,8 @@ class PushNotificationService {
   /// Called when Firebase Messaging (or another provider) supplies a token.
   Future<void> registerDeviceToken(String token) async {
     _deviceToken = token;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cached_device_fcm_token', token);
     await syncDeviceTokenWithBackend();
   }
 
