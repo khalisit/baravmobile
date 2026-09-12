@@ -174,7 +174,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           credential,
         );
       } else if (provider == SocialProvider.apple) {
-        final appleProvider = OAuthProvider('apple.com');
+        final appleProvider = OAuthProvider('apple.com')
+          ..addScope('email')
+          ..addScope('name');
         userCredential = await FirebaseAuth.instance.signInWithProvider(
           appleProvider,
         );
@@ -223,9 +225,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         Navigator.of(context).pushReplacement(fadeRoute(const MainShell()));
       }
     } catch (e) {
-      // debugPrint('--- [FB LOGIN] ERROR CAUGHT: $e ---');
-      // debugPrint('--- [FB LOGIN] STACKTRACE: $stackTrace ---');
       if (!mounted) return;
+      if (e.toString().toLowerCase().contains('cancel') ||
+          e.toString().contains('1001')) {
+        return;
+      }
       _showError(e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
