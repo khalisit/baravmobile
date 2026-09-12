@@ -306,7 +306,7 @@ class LiveQuizController extends ChangeNotifier {
       try {
         questionsList = await ApiService.getQuizQuestions(quizData.id, token);
       } catch (e) {
-        debugPrint("Failed to fetch real questions: $e");
+        // debugPrint("Failed to fetch real questions: $e");
       }
     }
 
@@ -429,7 +429,7 @@ class LiveQuizController extends ChangeNotifier {
             }
           })
           .catchError((e) {
-            debugPrint('submitAnswer Error: $e');
+            // debugPrint('submitAnswer Error: $e');
           });
     }
   }
@@ -461,7 +461,7 @@ class LiveQuizController extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      debugPrint("Error using skip: $e");
+      // debugPrint("Error using skip: $e");
     }
   }
 
@@ -858,19 +858,19 @@ class LiveQuizController extends ChangeNotifier {
                 _finish(realWinners: payload?['winners']);
               }
             } catch (e) {
-              debugPrint("Error parsing WS message: $e");
+              // debugPrint("Error parsing WS message: $e");
             }
           }
         },
         onError: (e) {
-          debugPrint("WS Error: $e");
+          // debugPrint("WS Error: $e");
         },
         onDone: () {
-          debugPrint("WS Closed");
+          // debugPrint("WS Closed");
         },
       );
     } catch (e) {
-      debugPrint("Failed to connect WS: $e");
+      // debugPrint("Failed to connect WS: $e");
     }
   }
 
@@ -1028,9 +1028,9 @@ class LiveQuizController extends ChangeNotifier {
     if (qId != null) {
       try {
         await ApiService.reviveParticipant(qId, SessionController.instance.token);
-        debugPrint('Participant revived successfully on the backend!');
+        // debugPrint('Participant revived successfully on the backend!');
       } catch (e) {
-        debugPrint('Failed to revive participant on backend: $e');
+        // debugPrint('Failed to revive participant on backend: $e');
       }
     }
 
@@ -1176,7 +1176,7 @@ class LiveQuizController extends ChangeNotifier {
         _revealStatsLoaded = true;
         notifyListeners();
       } catch (e) {
-        debugPrint("Failed to fetch reveal stats: $e");
+        // debugPrint("Failed to fetch reveal stats: $e");
         // لە کاتی کێشەدا سفر دەبێت
         _optionVotes = List<int>.filled(4, 0);
         _revealStatsLoaded = true;
@@ -1276,7 +1276,7 @@ class LiveQuizController extends ChangeNotifier {
         _savePointsAtQuizEnd(serverWinners);
         notifyListeners();
       } catch (e) {
-        debugPrint('Error parsing fast winners from WS: $e');
+        // debugPrint('Error parsing fast winners from WS: $e');
       }
     }
 
@@ -1348,13 +1348,13 @@ class LiveQuizController extends ChangeNotifier {
                     unawaited(_audio.playWinners());
                   }
                 } catch (e) {
-                  debugPrint('Error parsing winners from API: $e');
+                  // debugPrint('Error parsing winners from API: $e');
                 }
               }
             }
           })
           .catchError((e) {
-            debugPrint("Failed to fetch quiz results: $e");
+            // debugPrint("Failed to fetch quiz results: $e");
           })
           .whenComplete(() {
             _isLoadingResults = false;
@@ -1426,7 +1426,7 @@ class LiveQuizController extends ChangeNotifier {
   }
 
   bool _parseIsWinner(Map<String, dynamic> w) {
-    debugPrint('[parseIsWinner] Keys: ${w.keys.toList()} | isWinner: ${w['isWinner']} | is_winner: ${w['is_winner']} | winnerPosition: ${w['winnerPosition']} | winner_position: ${w['winner_position']}');
+    // debugPrint('[parseIsWinner] Keys: ${w.keys.toList()} | isWinner: ${w['isWinner']} | is_winner: ${w['is_winner']} | winnerPosition: ${w['winnerPosition']} | winner_position: ${w['winner_position']}');
     final val = w['isWinner'] ?? w['is_winner'];
     if (val == null) {
       return w['winnerPosition'] != null || w['winner_position'] != null;

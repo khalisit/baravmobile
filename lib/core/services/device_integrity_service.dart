@@ -35,8 +35,8 @@ class DeviceIntegrityService {
       final raw = await _channel.invokeMethod<Map<dynamic, dynamic>>('check');
       final compromised = raw?['compromised'] == true;
       _compromised = compromised;
-    } catch (e, st) {
-      debugPrint('DeviceIntegrityService.refresh failed: $e\n$st');
+    } catch (e) {
+      // debugPrint('DeviceIntegrityService.refresh failed: $e\n$st');
       // ئەگەر پشکنین شکستی هێنا — قفڵ ناکرێت بۆ ئەوەی یوزەری ئاسایی نەگیرێت.
       _compromised = false;
     }

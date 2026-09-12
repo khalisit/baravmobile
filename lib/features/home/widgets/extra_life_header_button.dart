@@ -267,10 +267,21 @@ class _ExtraLifeHeaderButtonState extends State<ExtraLifeHeaderButton>
   }
 }
 
-class _ExtraLifeDialog extends StatelessWidget {
+class _ExtraLifeDialog extends StatefulWidget {
   const _ExtraLifeDialog();
 
+  @override
+  State<_ExtraLifeDialog> createState() => _ExtraLifeDialogState();
+}
+
+class _ExtraLifeDialogState extends State<_ExtraLifeDialog> {
+  String? _errorMessage;
+
   Future<void> _watchAd(BuildContext context) async {
+    setState(() {
+      _errorMessage = null;
+    });
+
     // پیشاندانی لۆدینگ
     showDialog(
       context: context,
@@ -294,18 +305,14 @@ class _ExtraLifeDialog extends StatelessWidget {
               behavior: SnackBarBehavior.floating,
             ),
           );
+          Navigator.pop(context); // Close the modal upon success
         }
       },
       onError: (message) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: AppColors.danger,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          setState(() {
+            _errorMessage = message;
+          });
         }
       },
     );
@@ -471,6 +478,18 @@ class _ExtraLifeDialog extends StatelessWidget {
                                     unawaited(_watchAd(context)),
                               ),
                             ),
+                            if (_errorMessage != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
+                                child: Text(
+                                  _errorMessage!,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.danger,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),

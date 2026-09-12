@@ -86,5 +86,21 @@
 	</array>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3139189762957713~2504120198</string>
+	<!-- Google Sign-in Section -->
+	<key>GIDClientID</key>
+	<string>747424875838-5nqet3jm0t704vkh4jedc7g4l5b91kg3.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>747424875838-6mqn0tqkqihifr4u6u14l3rse2na1bfc.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.747424875838-5nqet3jm0t704vkh4jedc7g4l5b91kg3</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
