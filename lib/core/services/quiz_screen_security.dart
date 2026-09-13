@@ -21,6 +21,8 @@ class QuizScreenSecurity {
 
   /// چالاککردن لە کاتی کویزی زیندوو.
   static Future<void> enable() async {
+    return; // Disabled for now as requested
+    /*
     if (kIsWeb) return;
     try {
       await _channel.invokeMethod<void>('enable');
@@ -29,6 +31,7 @@ class QuizScreenSecurity {
     } catch (e) {
       // debugPrint('QuizScreenSecurity.enable failed: $e\n$st');
     }
+    */
   }
 
   /// ناکارا کردن دوای جێهێشتنی کویز.
