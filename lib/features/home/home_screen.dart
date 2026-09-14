@@ -49,8 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
     unawaited(_fetchHomeSponsors());
     unawaited(LiveQuizController.instance.fetchLastWinners());
 
-    // Auto-refresh every 22 seconds for real-time status updates
-    _pollingTimer = Timer.periodic(const Duration(seconds: 22), (_) {
+    // Auto-refresh every 8 seconds for real-time status updates (reduced for faster UI response)
+    _pollingTimer = Timer.periodic(const Duration(seconds: 8), (_) {
       _silentRefresh();
     });
 
@@ -194,26 +194,43 @@ class _HomeScreenState extends State<HomeScreen> {
     final token = SessionController.instance.token;
     if (token == null) return;
 
+    // Optimistic UI update for instantaneous feedback
+    setState(() {
+      if (_quizzes != null) {
+        _quizzes = _quizzes!.map((q) {
+          if (q.id == quiz.id) {
+            return q.copyWith(
+              isJoined: true,
+              participantStatus: 'JOINED',
+              participantCount: q.participantCount + 1,
+            );
+          }
+          return q;
+        }).toList();
+      }
+    });
+
     try {
       await ApiService.joinQuizSession(quiz.id, token);
-
+    } catch (e) {
       if (!mounted) return;
+      
+      // Revert optimistic update on failure
       setState(() {
         if (_quizzes != null) {
           _quizzes = _quizzes!.map((q) {
             if (q.id == quiz.id) {
               return q.copyWith(
-                isJoined: true,
-                participantStatus: 'JOINED',
-                participantCount: q.participantCount + 1,
+                isJoined: quiz.isJoined,
+                participantStatus: quiz.participantStatus,
+                participantCount: quiz.participantCount,
               );
             }
             return q;
           }).toList();
         }
       });
-    } catch (e) {
-      if (!mounted) return;
+      
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -228,22 +245,35 @@ class _HomeScreenState extends State<HomeScreen> {
     final token = SessionController.instance.token;
     if (token == null) return;
 
+    // Optimistic UI update for instantaneous feedback
+    setState(() {
+      if (_quizzes != null) {
+        _quizzes = _quizzes!.map((q) {
+          if (q.id == quiz.id) {
+            return q.copyWith(participantStatus: 'READY');
+          }
+          return q;
+        }).toList();
+      }
+    });
+
     try {
       await ApiService.setQuizReady(quiz.id, token);
-
+    } catch (e) {
       if (!mounted) return;
+      
+      // Revert optimistic update on failure
       setState(() {
         if (_quizzes != null) {
           _quizzes = _quizzes!.map((q) {
             if (q.id == quiz.id) {
-              return q.copyWith(participantStatus: 'READY');
+              return q.copyWith(participantStatus: quiz.participantStatus);
             }
             return q;
           }).toList();
         }
       });
-    } catch (e) {
-      if (!mounted) return;
+      
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

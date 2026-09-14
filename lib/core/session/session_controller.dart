@@ -49,9 +49,18 @@ class SessionController extends ChangeNotifier {
   int? _pendingLevelUpTo;
   String? _token;
 
+  String? _tempToken;
+  UserProfile? _tempUser;
+
   UserProfile? get user => _user;
   bool get isLoggedIn => _user != null;
   String? get token => _token;
+
+  bool get requiresProfileCompletion {
+    if (_user == null) return false;
+    final u = _user!;
+    return u.username.trim().isEmpty || u.fullName.trim().isEmpty || (u.provider != 'phone' && u.phone.trim().isEmpty);
+  }
 
   int get points => _points;
   LevelProgress get progress => PlayerProgress.forPoints(_points);
@@ -143,6 +152,10 @@ class SessionController extends ChangeNotifier {
       );
       _points = pointsFromDb;
       if (_user != null) {
+        if (_user!.status == 'banned' || _user!.status == 'suspended') {
+          await signOut();
+          return false;
+        }
         await _prefs?.setInt(_storageKeyFor(_user!), _points);
         await _prefs?.setString(_userKey, jsonEncode(_user!.toMap()));
       }
@@ -191,7 +204,15 @@ class SessionController extends ChangeNotifier {
     );
 
     if (userStatus == 'deleted') {
-      return true;
+      _tempToken = _token;
+      _tempUser = _user;
+      _token = null;
+      _user = null;
+      throw Exception('user-deleted');
+    }
+
+    if (userStatus == 'banned' || userStatus == 'suspended') {
+      throw Exception('user-disabled');
     }
 
     if (_token != null) {
@@ -240,8 +261,23 @@ class SessionController extends ChangeNotifier {
       verifyPhone: userMap['verifyPhone'] == true || userMap['verifyPhone'] == 1 || userMap['verify_phone'] == true || userMap['verify_phone'] == 1,
     );
 
+    if (_user!.status == 'deleted') {
+      _tempToken = _token;
+      _tempUser = _user;
+      _token = null;
+      _user = null;
+      throw Exception('user-deleted');
+    }
+
     if (_token != null) await _prefs?.setString(_tokenKey, _token!);
-    if (_user != null) await _prefs?.setString(_userKey, jsonEncode(_user!.toMap()));
+    if (_user != null) {
+      if (_user!.status == 'banned' || _user!.status == 'suspended') {
+        _token = null;
+        _user = null;
+        throw Exception('user-disabled');
+      }
+      await _prefs?.setString(_userKey, jsonEncode(_user!.toMap()));
+    }
 
     _initializeUserSession();
     _startSessionRefreshTimer();
@@ -282,6 +318,11 @@ class SessionController extends ChangeNotifier {
       totalRewards: userMap['totalRewards'] ?? 0,
       verifyPhone: userMap['verifyPhone'] == true || userMap['verifyPhone'] == 1 || userMap['verify_phone'] == true || userMap['verify_phone'] == 1,
     );
+    if (_user!.status == 'banned' || _user!.status == 'suspended') {
+      _token = null;
+      _user = null;
+      throw Exception('user-disabled');
+    }
     await _prefs?.setString(_userKey, jsonEncode(_user!.toMap()));
 
     _initializeUserSession();
@@ -416,6 +457,11 @@ class SessionController extends ChangeNotifier {
       await _prefs?.setString(_tokenKey, _token!);
     }
     if (_user != null) {
+      if (_user!.status == 'banned' || _user!.status == 'suspended') {
+        _token = null;
+        _user = null;
+        throw Exception('user-disabled');
+      }
       await _prefs?.setString(_userKey, jsonEncode(_user!.toMap()));
     }
 
@@ -464,17 +510,30 @@ class SessionController extends ChangeNotifier {
   }
 
   Future<void> activateAccount() async {
-    if (_user == null || _token == null) return;
-    await ApiService.updateUser(_user!.id, {'status': 'active'}, _token!);
+    final u = _user ?? _tempUser;
+    final t = _token ?? _tempToken;
+    if (u == null || t == null) return;
+    
+    await ApiService.updateUser(u.id, {'status': 'active'}, t);
+    
+    _token = t;
+    _user = u.copyWith(status: 'active');
+    _tempToken = null;
+    _tempUser = null;
+    
     await _prefs?.setString(_tokenKey, _token!);
-    _user = _user!.copyWith(status: 'active');
     _initializeUserSession();
     _startSessionRefreshTimer();
   }
 
   void cancelActivation() {
-    _token = null;
-    _user = null;
+    if (_tempToken != null) {
+      _tempToken = null;
+      _tempUser = null;
+    } else {
+      _token = null;
+      _user = null;
+    }
     notifyListeners();
   }
 

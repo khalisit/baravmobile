@@ -8,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/session/session_controller.dart';
 import 'features/auth/login_screen.dart';
+import 'features/auth/complete_profile_screen.dart';
 import 'features/shell/main_shell.dart';
 
 class BaravApp extends StatelessWidget {
@@ -65,7 +66,19 @@ class BaravApp extends StatelessWidget {
               ),
             );
           },
-          home: SessionController.instance.isLoggedIn ? const MainShell() : const LoginScreen(),
+          home: SessionController.instance.isLoggedIn
+              ? (SessionController.instance.requiresProfileCompletion
+                  ? CompleteProfileScreen(
+                      token: SessionController.instance.token ?? '',
+                      provider: SessionController.instance.user?.provider ?? 'google',
+                      isUpdatingExisting: true,
+                      initialName: SessionController.instance.user?.fullName,
+                      initialUsername: SessionController.instance.user?.username,
+                      initialAvatarUrl: SessionController.instance.user?.avatarPath,
+                      initialPhone: SessionController.instance.user?.phone,
+                    )
+                  : const MainShell())
+              : const LoginScreen(),
         );
       },
     );

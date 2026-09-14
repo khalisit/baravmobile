@@ -45,6 +45,7 @@ class CompleteProfileScreen extends StatefulWidget {
   final String? initialUsername;
 
   final String? initialPhone;
+  final bool isUpdatingExisting;
 
   const CompleteProfileScreen({
     super.key,
@@ -54,6 +55,7 @@ class CompleteProfileScreen extends StatefulWidget {
     this.initialAvatarUrl,
     this.initialUsername,
     this.initialPhone,
+    this.isUpdatingExisting = false,
   });
 
   @override
@@ -217,18 +219,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
     setState(() => _loading = true);
     try {
-      if (widget.provider == 'phone') {
-        // Phone user was already registered in step 1. Update name, username, avatar.
+      if (widget.provider == 'phone' || widget.isUpdatingExisting) {
+        // Phone user or existing OAuth user with incomplete profile. Update name, username, avatar.
         await SessionController.instance.updateProfile(
           fullName: _nameController.text.trim(),
           username: _usernameController.text.trim(),
-          phone: _phoneController.text.trim(),
+          phone: widget.provider != 'phone' ? _phoneController.text.trim() : _phoneController.text.trim(),
           phoneCode: _selectedCountry.code,
           avatarPath: _avatarPath,
           isInitialSetup: true,
         );
       } else {
-        // OAuth user (Google, Apple, Facebook)
+        // New OAuth user (Google, Apple, Facebook)
         await SessionController.instance.registerWithProvider(
           token: widget.token,
           fullName: _nameController.text.trim(),

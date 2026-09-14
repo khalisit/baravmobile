@@ -99,6 +99,10 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.of(context).pushReplacement(fadeRoute(const MainShell()));
     } catch (e) {
       if (!mounted) return;
+      if (e.toString().contains('user-deleted')) {
+        _showReactivateDialog();
+        return;
+      }
       _showErrorDialog(e.toString().replaceAll('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loadingState = 'none');
@@ -192,27 +196,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      if (isNewUser) {
+      if (isNewUser || SessionController.instance.requiresProfileCompletion) {
         final fbUser = userCredential.user;
-        final initialName = fbUser?.displayName;
-        final initialAvatarUrl = fbUser?.photoURL;
-        String? initialUsername;
-        if (fbUser?.email != null) {
-          initialUsername = fbUser!.email!.split('@')[0];
-        } else if (fbUser?.displayName != null) {
-          initialUsername = fbUser!.displayName!
-              .replaceAll(' ', '')
-              .toLowerCase();
+        final initialName = fbUser?.displayName ?? SessionController.instance.user?.fullName;
+        final initialAvatarUrl = fbUser?.photoURL ?? SessionController.instance.user?.avatarPath;
+        String? initialUsername = SessionController.instance.user?.username;
+        if (initialUsername == null || initialUsername.isEmpty) {
+          if (fbUser?.email != null) {
+            initialUsername = fbUser!.email!.split('@')[0];
+          } else if (fbUser?.displayName != null) {
+            initialUsername = fbUser!.displayName!
+                .replaceAll(' ', '')
+                .toLowerCase();
+          }
         }
 
         Navigator.of(context).pushReplacement(
           softRoute(
             CompleteProfileScreen(
-              token: token,
+              token: isNewUser ? token : (SessionController.instance.token ?? token),
               provider: provider.name,
+              isUpdatingExisting: !isNewUser,
               initialName: initialName,
               initialAvatarUrl: initialAvatarUrl,
               initialUsername: initialUsername,
+              initialPhone: SessionController.instance.user?.phone,
             ),
           ),
         );
@@ -225,6 +233,10 @@ class _LoginScreenState extends State<LoginScreen> {
           e.toString().contains('1001')) {
         return;
       }
+      if (e.toString().contains('user-deleted')) {
+        _showReactivateDialog();
+        return;
+      }
       _showErrorDialog(e.toString());
     } finally {
       if (mounted) setState(() => _loadingState = 'none');
@@ -234,6 +246,67 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _showErrorDialog(dynamic message) async {
     if (!mounted) return;
     await ErrorTranslator.showDialogError(context, message);
+  }
+
+  Future<void> _showReactivateDialog() async {
+    if (!mounted) return;
+    final isSorani = LocaleController.instance.isSorani;
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.of(context).surface,
+        title: Text(
+          isSorani ? 'پاشگەزبوونەوە لە سڕینەوە' : 'Vegerandina jêbirinê',
+          style: Theme.of(ctx).textTheme.titleLarge,
+        ),
+        content: Text(
+          isSorani
+              ? 'ئەم هەژمارە لە پرۆسەی سڕینەوەدایە (لەسەر داوای خۆت). ئایا دەتەوێت دووبارە چالاکی بکەیتەوە بەر لە تەواوبوونی ٣٠ ڕۆژەکە؟'
+              : 'Ev hesab di pêvajoya jêbirinê de ye. Tu dixwazî berî 30 rojan dîsa çalak bikî?',
+          style: Theme.of(ctx).textTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              isSorani ? 'نەخێر' : 'Nexêr',
+              style: TextStyle(color: AppColors.of(context).textMuted),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.purpleLight,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              isSorani ? 'بەڵێ، چالاکی بکەوە' : 'Erê, çalak bike',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      setState(() => _loadingState = 'reactivating');
+      try {
+        await SessionController.instance.activateAccount();
+        if (mounted) {
+          Navigator.of(context).pushReplacement(fadeRoute(const MainShell()));
+        }
+      } catch (e) {
+        _showErrorDialog(e);
+      } finally {
+        if (mounted) setState(() => _loadingState = 'none');
+      }
+    } else {
+      SessionController.instance.cancelActivation();
+    }
   }
 
   // ── Custom Social Button Builder ──────────────────────────────────────────
