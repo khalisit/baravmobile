@@ -147,6 +147,7 @@ class LiveQuizController extends ChangeNotifier {
       !_skipUsedThisQuiz &&
       _localStatus == QuizSessionStatus.playing &&
       _phase == LiveQuizPhase.question &&
+      !_answered &&
       (SessionController.instance.user?.skip ?? 0) > 0;
   bool get passArmed => _passArmed;
   bool get canSkipWithExtraLife =>

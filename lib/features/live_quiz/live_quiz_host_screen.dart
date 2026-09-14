@@ -22,6 +22,7 @@ import 'widgets/lobby_view.dart';
 import 'widgets/option_vote_badge.dart';
 import 'widgets/spectator_status_bar.dart';
 import 'widgets/skip_question_chip.dart';
+import 'widgets/skip_chance_chip.dart';
 import 'widgets/elimination_overlay.dart';
 import 'widgets/winners_view.dart';
 import 'widgets/question_phase_body.dart';
@@ -435,6 +436,53 @@ class _QuestionViewState extends State<_QuestionView>
     setState(() {});
   }
 
+  Future<void> _showSkipConfirmDialog(BuildContext context) async {
+    final isSorani = LocaleController.instance.isSorani;
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          isSorani ? 'بەکارهێنانی هەلی سکایپ' : 'Bikaranîna Derbasbûnê',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colors.ink,
+          ),
+        ),
+        content: Text(
+          isSorani
+              ? 'ئایا دڵنیای دەتەوێت هەلی سکایپ بەکاربهێنیت؟ تەنها یەکجار بۆت هەیە لە هەر کویزێکدا، و وەڵامە ڕاستەکەت بۆ هەڵدەبژێرێت.'
+              : 'Ma tu ewle yî tu dixwazî derbasbûnê bikar bînî? Tu dikarî tenê carekê di quizê de bikar bînî.',
+          style: theme.textTheme.bodyMedium?.copyWith(color: colors.textMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(isSorani ? 'نەخێر' : 'Nexêr', style: TextStyle(color: colors.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(isSorani ? 'بەڵێ، بەکاریبهێنە' : 'Erê, bikar bîne', style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await LiveQuizController.instance.useSkipOpportunity();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -557,14 +605,19 @@ class _QuestionViewState extends State<_QuestionView>
                 if (spectating) ...[
                   SpectatorStatusBar(onLeave: () => _leaveLiveQuiz(context)),
                   const SizedBox(width: 8),
-                ] else if (!revealing &&
-                    (_controller.canSkipWithExtraLife ||
-                        _controller.passArmed)) ...[
-                  SkipQuestionChip(
-                    selected: _controller.passArmed,
-                    onTap: _controller.togglePassArmed,
+                ] else if (!revealing) ...[
+                  SkipChanceChip(
+                    disabled: !_controller.canUseSkipChance,
+                    onTap: () => _showSkipConfirmDialog(context),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
+                  if (_controller.canSkipWithExtraLife || _controller.passArmed) ...[
+                    SkipQuestionChip(
+                      selected: _controller.passArmed,
+                      onTap: _controller.togglePassArmed,
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                 ],
                 Icon(
                   Icons.people_alt_rounded,
