@@ -1253,7 +1253,14 @@ class LiveQuizController extends ChangeNotifier {
           final score = scoreRaw is num
               ? scoreRaw.toInt()
               : (scoreRaw != null ? int.tryParse(scoreRaw.toString()) : null);
+              
+          final timeRaw = w['totalAnswerTimeMs'] ?? w['total_answer_time_ms'];
+          final totalAnswerTimeMs = timeRaw is num
+              ? timeRaw.toInt()
+              : (timeRaw != null ? int.tryParse(timeRaw.toString()) : null);
 
+          final isWinner = _parseIsWinner(w);
+          
           return QuizWinner(
             name: (w['username']?.toString()) ??
                 (w['userName']?.toString()) ??
@@ -1262,15 +1269,16 @@ class LiveQuizController extends ChangeNotifier {
                 (w['full_name']?.toString()) ??
                 'یاریزان',
             username: w['username']?.toString(),
-            prize: _prizeForRank(rank),
+            prize: isWinner ? _prizeForRank(rank) : '',
             rank: rank,
             avatarPath: (w['avatarUrl']?.toString()) ??
                 (w['avatarKey']?.toString()) ??
                 (w['avatar_key']?.toString()) ??
                 (w['avatar_url']?.toString()),
             userId: (w['userId']?.toString()) ?? (w['user_id']?.toString()),
-            isWinner: _parseIsWinner(w),
+            isWinner: isWinner,
             score: score,
+            totalAnswerTimeMs: totalAnswerTimeMs,
           );
         }).toList();
         _winners = serverWinners;
@@ -1319,6 +1327,13 @@ class LiveQuizController extends ChangeNotifier {
                               ? int.tryParse(scoreRaw.toString())
                               : null);
 
+                    final timeRaw = w['totalAnswerTimeMs'] ?? w['total_answer_time_ms'];
+                    final totalAnswerTimeMs = timeRaw is num
+                        ? timeRaw.toInt()
+                        : (timeRaw != null ? int.tryParse(timeRaw.toString()) : null);
+
+                    final isWinner = _parseIsWinner(w);
+                    
                     return QuizWinner(
                       name: (w['username']?.toString()) ??
                           (w['userName']?.toString()) ??
@@ -1327,15 +1342,16 @@ class LiveQuizController extends ChangeNotifier {
                           (w['full_name']?.toString()) ??
                           'یاریزان',
                       username: w['username']?.toString(),
-                      prize: _prizeForRank(rank),
+                      prize: isWinner ? _prizeForRank(rank) : '',
                       rank: rank,
                       avatarPath: (w['avatarUrl']?.toString()) ??
                           (w['avatarKey']?.toString()) ??
                           (w['avatar_key']?.toString()) ??
                           (w['avatar_url']?.toString()),
                       userId: (w['userId']?.toString()) ?? (w['user_id']?.toString()),
-                      isWinner: _parseIsWinner(w),
+                      isWinner: isWinner,
                       score: score,
+                      totalAnswerTimeMs: totalAnswerTimeMs,
                     );
                   }).toList();
                   _winners = serverWinners;

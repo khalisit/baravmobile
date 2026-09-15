@@ -150,6 +150,7 @@ class QuizWinner {
     this.userId,
     this.isWinner = true,
     this.score,
+    this.totalAnswerTimeMs,
   });
 
   final String name;
@@ -160,6 +161,7 @@ class QuizWinner {
   final String? userId;
   final bool isWinner;
   final int? score;
+  final int? totalAnswerTimeMs;
 
   bool get hasAvatar =>
       avatarPath != null && avatarPath!.trim().isNotEmpty;

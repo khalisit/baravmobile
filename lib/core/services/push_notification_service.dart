@@ -22,7 +22,7 @@ class PushNotificationService {
 
   static final PushNotificationService instance = PushNotificationService._();
 
-  static const String channelId = 'barav_quiz_push_v3';
+  static const String channelId = 'barav_quiz_push_v4';
   static const String channelName = 'BARAV QUIZ';
   static const String _promptedKey = 'push_permission_prompted';
   static const String _enabledKey = 'user_notifications_enabled';
@@ -113,6 +113,11 @@ class PushNotificationService {
       await _initFirebaseMessaging();
     } else {
       await syncDeviceTokenWithBackend();
+      if (_enabledSetting && SessionController.instance.isLoggedIn) {
+        try {
+          await FirebaseMessaging.instance.subscribeToTopic('all');
+        } catch (_) {}
+      }
     }
   }
 
@@ -229,7 +234,11 @@ class PushNotificationService {
         }
 
         try {
-          await fcm.subscribeToTopic('all');
+          if (SessionController.instance.isLoggedIn) {
+            await fcm.subscribeToTopic('all');
+          } else {
+            await fcm.unsubscribeFromTopic('all');
+          }
         } catch (_) {}
       }
     } catch (e) {
@@ -247,7 +256,11 @@ class PushNotificationService {
       if (enabled) {
         await fcm.setAutoInitEnabled(true);
         try {
-          await fcm.subscribeToTopic('all');
+          if (SessionController.instance.isLoggedIn) {
+            await fcm.subscribeToTopic('all');
+          } else {
+            await fcm.unsubscribeFromTopic('all');
+          }
         } catch (_) {}
         final token = await fcm.getToken();
         if (token != null) {

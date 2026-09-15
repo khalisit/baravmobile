@@ -51,10 +51,9 @@ class WinnersView extends StatelessWidget {
     final c = LiveQuizController.instance;
     final me = SessionController.instance.user;
     final all = c.winners; // full leaderboard (winners + others)
-    final actualWinners = all.where((w) => w.isWinner).toList();
 
     // Sort to be extra sure
-    final sorted = List<QuizWinner>.from(actualWinners)
+    final sorted = List<QuizWinner>.from(all)
       ..sort((a, b) => a.rank.compareTo(b.rank));
 
     // Podium top 3
@@ -73,13 +72,13 @@ class WinnersView extends StatelessWidget {
     return Column(
       children: [
         // ── Header ──
-        _buildHeader(theme, colors, c.isWinner, actualWinners.isEmpty),
+        _buildHeader(theme, colors, c.isWinner, sorted.isEmpty),
 
         // ── Body ──
         Expanded(
-          child: c.isLoadingResults && actualWinners.isEmpty
+          child: c.isLoadingResults && sorted.isEmpty
               ? const Center(child: CircularProgressIndicator())
-              : actualWinners.isEmpty
+              : sorted.isEmpty
               ? _buildNoWinners(theme, colors)
               : CustomScrollView(
                   slivers: [
@@ -457,17 +456,20 @@ class WinnersView extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     // Prize (large text)
-                    Text(
-                      prize,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: winner != null ? scoreColor : colors.textFaint,
-                        fontWeight: FontWeight.w900,
-                        fontSize: isFirst ? 17.5 : 14.5,
+                    if (winner != null && winner.isWinner && winner.prize.isNotEmpty)
+                      Text(
+                        prize,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: scoreColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: isFirst ? 17.5 : 14.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    if (winner != null && (!winner.isWinner || winner.prize.isEmpty))
+                      const SizedBox(height: 8),
                     const SizedBox(height: 4),
                     // Score (smaller text)
                     if (score != null)
@@ -499,6 +501,29 @@ class WinnersView extends StatelessWidget {
                           fontSize: 10.5,
                         ),
                       ),
+                    if (winner?.totalAnswerTimeMs != null) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 11,
+                            color: colors.textFaint,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${KurdishFormat.digits((winner!.totalAnswerTimeMs! / 1000).toStringAsFixed(1))} چرکە',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.textMuted,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 9.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -685,6 +710,22 @@ class _LeaderboardRow extends StatelessWidget {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+                            if (winner.totalAnswerTimeMs != null) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.timer_outlined,
+                                size: 12,
+                                color: colors.textFaint,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${KurdishFormat.digits((winner.totalAnswerTimeMs! / 1000).toStringAsFixed(1))} چرکە',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colors.textMuted,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ],
@@ -693,35 +734,36 @@ class _LeaderboardRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 // Beautiful Prize Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceHigh,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: colors.stroke, width: 0.8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.emoji_events_outlined,
-                        size: 12,
-                        color: colors.textMuted,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        winner.prize,
-                        style: theme.textTheme.labelSmall?.copyWith(
+                if (winner.isWinner && winner.prize.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceHigh,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: colors.stroke, width: 0.8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.emoji_events_outlined,
+                          size: 12,
                           color: colors.textMuted,
-                          fontWeight: FontWeight.w700,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          winner.prize,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.textMuted,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 if (isYou) ...[
                   const SizedBox(width: 8),
                   _YouBadge(theme: theme),

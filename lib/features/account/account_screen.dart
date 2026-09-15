@@ -893,7 +893,7 @@ class _StatsSection extends StatelessWidget {
                       child: _StatItem(
                         icon: Icons.redeem_rounded,
                         color: Colors.purple,
-                        value: KurdishFormat.number(totalRewards),
+                        value: '${KurdishFormat.number(totalRewards)} IQD',
                         label: isSorani ? 'کۆی خەڵاتەکان' : 'Xelat',
                       ),
                     ),

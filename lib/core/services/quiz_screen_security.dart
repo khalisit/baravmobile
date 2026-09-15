@@ -58,13 +58,5 @@ class QuizScreenSecurity {
     }
   }
 
-  static void _listenRecording() {
-    if (!Platform.isIOS) return;
-    _recordingSub?.cancel();
-    _recordingSub = _events.receiveBroadcastStream().listen((event) {
-      if (event is bool) {
-        onRecordingChanged?.call(event);
-      }
-    });
-  }
+
 }

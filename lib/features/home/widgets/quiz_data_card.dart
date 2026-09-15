@@ -17,9 +17,9 @@ class QuizDataCard extends StatefulWidget {
   });
 
   final QuizData quiz;
-  final VoidCallback? onJoin;
-  final VoidCallback? onEnter;
-  final VoidCallback? onReady;
+  final FutureOr<void> Function()? onJoin;
+  final FutureOr<void> Function()? onEnter;
+  final FutureOr<void> Function()? onReady;
 
   @override
   State<QuizDataCard> createState() => _QuizDataCardState();
@@ -29,6 +29,7 @@ class _QuizDataCardState extends State<QuizDataCard> {
   Timer? _timer;
   int? _countdownSeconds;
   bool _autoEntered = false;
+  bool _isLoading = false;
 
   // Track if we are within the 30-minute window (1800 seconds)
   bool _isWithinReadyWindow = false;
@@ -126,6 +127,9 @@ class _QuizDataCardState extends State<QuizDataCard> {
     DateTime? targetDate,
   ) {
     if (!quiz.isJoined) {
+      if ((quiz.sessionStatus == 'LIVE' || quiz.status == 'live')) {
+        return 'کویزەکە دەستی پێکردووە';
+      }
       if (quiz.status == 'PUBLISHED' ||
           quiz.status == 'published' ||
           quiz.status == 'running') {
@@ -133,9 +137,6 @@ class _QuizDataCardState extends State<QuizDataCard> {
       }
       if ((quiz.sessionStatus == 'WAITING' || quiz.status == 'ready')) {
         return 'هێشتا کاتی بەشداریکردن نەهاتووە';
-      }
-      if ((quiz.sessionStatus == 'LIVE' || quiz.status == 'live')) {
-        return 'کویزەکە دەستی پێکردووە';
       }
       return 'کۆتایی هاتووە';
     }
@@ -176,6 +177,9 @@ class _QuizDataCardState extends State<QuizDataCard> {
     DateTime? targetDate,
   ) {
     if (!quiz.isJoined) {
+      if (quiz.sessionStatus == 'LIVE' || quiz.status == 'live') {
+        return false;
+      }
       return quiz.status == 'PUBLISHED' ||
           quiz.status == 'published' ||
           quiz.status == 'running';
@@ -213,33 +217,46 @@ class _QuizDataCardState extends State<QuizDataCard> {
     return false;
   }
 
-  void _onButtonPressed(QuizData quiz, DateTime? targetDate) {
-    if (!quiz.isJoined) {
-      if (quiz.status == 'PUBLISHED' ||
-          quiz.status == 'published' ||
-          quiz.status == 'running') {
-        widget.onJoin?.call();
+  Future<void> _onButtonPressed(QuizData quiz, DateTime? targetDate) async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (!quiz.isJoined) {
+        if (quiz.status == 'PUBLISHED' ||
+            quiz.status == 'published' ||
+            quiz.status == 'running') {
+          await widget.onJoin?.call();
+        }
+        return;
       }
-      return;
+
+      final pStatus = quiz.participantStatus?.toUpperCase();
+      final sStatus = quiz.sessionStatus?.toUpperCase();
+
+      // کویزەکە LIVE ە: چوونە ناوە
+      if (sStatus == 'LIVE' &&
+          (pStatus == 'PLAYING' || pStatus == 'READY' || pStatus == 'JOINED')) {
+        await widget.onEnter?.call();
+        return;
+      }
+
+      // JOINED بوو بەڵام LIVE نەبووە: تەنها ئامادەیی ڕابگرە، نەچێت پەیجی تر
+      if (pStatus == 'JOINED') {
+        await widget.onReady?.call();
+        return;
+      }
+
+      // READY بوو بەڵام هێشتا LIVE نەبووە — چاوەڕێبە
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
-    final pStatus = quiz.participantStatus?.toUpperCase();
-    final sStatus = quiz.sessionStatus?.toUpperCase();
-
-    // کویزەکە LIVE ە: چوونە ناوە
-    if (sStatus == 'LIVE' &&
-        (pStatus == 'PLAYING' || pStatus == 'READY' || pStatus == 'JOINED')) {
-      widget.onEnter?.call();
-      return;
-    }
-
-    // JOINED بوو بەڵام LIVE نەبووە: تەنها ئامادەیی ڕابگرە، نەچێت پەیجی تر
-    if (pStatus == 'JOINED') {
-      widget.onReady?.call();
-      return;
-    }
-
-    // READY بوو بەڵام هێشتا LIVE نەبووە — چاوەڕێبە
   }
 
   @override
@@ -759,7 +776,7 @@ class _QuizDataCardState extends State<QuizDataCard> {
                   height: 54,
                   child: ElevatedButton(
                     onPressed:
-                        _isButtonEnabled(quiz, _isWithinReadyWindow, targetDate)
+                        (_isButtonEnabled(quiz, _isWithinReadyWindow, targetDate) && !_isLoading)
                         ? () => _onButtonPressed(quiz, targetDate)
                         : null,
                     style: ElevatedButton.styleFrom(
@@ -810,9 +827,18 @@ class _QuizDataCardState extends State<QuizDataCard> {
                       ),
                       child: Container(
                         alignment: Alignment.center,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
                             if (quiz.isJoined &&
                                 !_isButtonEnabled(
                                   quiz,

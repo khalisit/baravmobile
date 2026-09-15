@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
 import '../../core/localization/app_strings.dart';
 import '../../core/localization/locale_controller.dart';
 import '../../core/extra_life/extra_life_controller.dart';
-import '../../core/services/quiz_screen_security.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/glow_backdrop.dart';
 import '../../data/live_quiz_models.dart';
@@ -42,8 +40,6 @@ class LiveQuizHostScreen extends StatefulWidget {
 
 class _LiveQuizHostScreenState extends State<LiveQuizHostScreen>
     with WidgetsBindingObserver {
-  bool _screenRecordingBlocked = false;
-
   @override
   void initState() {
     super.initState();
@@ -51,25 +47,10 @@ class _LiveQuizHostScreenState extends State<LiveQuizHostScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       LiveQuizController.instance.onHostOpened();
     });
-    if (Platform.isIOS) {
-      QuizScreenSecurity.onRecordingChanged = (recording) {
-        if (!mounted) return;
-        setState(() => _screenRecordingBlocked = recording);
-      };
-    }
-    unawaited(QuizScreenSecurity.enable());
-    if (Platform.isIOS) {
-      unawaited(() async {
-        final recording = await QuizScreenSecurity.isRecording();
-        if (mounted) setState(() => _screenRecordingBlocked = recording);
-      }());
-    }
   }
 
   @override
   void dispose() {
-    QuizScreenSecurity.onRecordingChanged = null;
-    unawaited(QuizScreenSecurity.disable());
     WidgetsBinding.instance.removeObserver(this);
     LiveQuizController.instance.onHostClosed();
     super.dispose();
@@ -233,11 +214,6 @@ class _LiveQuizHostScreenState extends State<LiveQuizHostScreen>
                     ),
                   ),
                 ),
-                if (_screenRecordingBlocked)
-                  const ColoredBox(
-                    color: Color(0xFF10172A),
-                    child: SizedBox.expand(),
-                  ),
               ],
             ),
           ),
@@ -305,6 +281,7 @@ class _QuestionViewState extends State<_QuestionView>
   int _pointsToastShownFor = -1;
   int _pointsBeforeQuestion = 0;
   int _sessionAccumulatedScore = 0;
+
   /// لیڤڵی یاریزانەکە لە سەرەتای ئەو پرسیارە — بۆ دیارکردنی لیڤڵ ئاپ لە کاتی وەرگرتنی خاڵ.
   int _levelBeforeQuestion = 0;
   int _levelUpTo = -1;
@@ -425,8 +402,11 @@ class _QuestionViewState extends State<_QuestionView>
     _levelUpTo = -1;
     _levelPop.reset();
     // شودەکانی لیڤڵی یاریزانەکە لە سەرەتای ھەر پرسیارێک — بۆ دیارکردنی لیڤڵ ئاپ لە کاتی ئاشکرابوونی خاڵەکە.
-    _pointsBeforeQuestion = SessionController.instance.points + _sessionAccumulatedScore;
-    _levelBeforeQuestion = PlayerProgress.forPoints(_pointsBeforeQuestion).level;
+    _pointsBeforeQuestion =
+        SessionController.instance.points + _sessionAccumulatedScore;
+    _levelBeforeQuestion = PlayerProgress.forPoints(
+      _pointsBeforeQuestion,
+    ).level;
 
     // debugPrint("[LevelUpCheck] _bindQuestion index=$_boundQuestion, _pointsBeforeQuestion=$_pointsBeforeQuestion, _levelBeforeQuestion=$_levelBeforeQuestion, sessionPoints=${SessionController.instance.points}, sessionAccumScore=$_sessionAccumulatedScore");
 
@@ -445,9 +425,7 @@ class _QuestionViewState extends State<_QuestionView>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: colors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           isSorani ? 'بەکارهێنانی هەلی سکایپ' : 'Bikaranîna Derbasbûnê',
           style: theme.textTheme.titleMedium?.copyWith(
@@ -464,7 +442,10 @@ class _QuestionViewState extends State<_QuestionView>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(isSorani ? 'نەخێر' : 'Nexêr', style: TextStyle(color: colors.textMuted)),
+            child: Text(
+              isSorani ? 'نەخێر' : 'Nexêr',
+              style: TextStyle(color: colors.textMuted),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -472,7 +453,10 @@ class _QuestionViewState extends State<_QuestionView>
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(isSorani ? 'بەڵێ، بەکاریبهێنە' : 'Erê, bikar bîne', style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              isSorani ? 'بەڵێ، بەکاریبهێنە' : 'Erê, bikar bîne',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -611,7 +595,8 @@ class _QuestionViewState extends State<_QuestionView>
                     onTap: () => _showSkipConfirmDialog(context),
                   ),
                   const SizedBox(width: 8),
-                  if (_controller.canSkipWithExtraLife || _controller.passArmed) ...[
+                  if (_controller.canSkipWithExtraLife ||
+                      _controller.passArmed) ...[
                     SkipQuestionChip(
                       selected: _controller.passArmed,
                       onTap: _controller.togglePassArmed,
@@ -698,10 +683,7 @@ class _QuestionViewState extends State<_QuestionView>
         if (_levelUpTo > 0)
           Align(
             alignment: const Alignment(0, -0.12),
-            child: LevelUpToast(
-              level: _levelUpTo,
-              animation: _levelPop,
-            ),
+            child: LevelUpToast(level: _levelUpTo, animation: _levelPop),
           ),
         if (_showElimOverlay)
           EliminationOverlay(
