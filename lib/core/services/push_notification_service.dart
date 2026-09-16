@@ -22,7 +22,7 @@ class PushNotificationService {
 
   static final PushNotificationService instance = PushNotificationService._();
 
-  static const String channelId = 'barav_quiz_push_v4';
+  static const String channelId = 'barav_quiz_push_v5';
   static const String channelName = 'BARAV QUIZ';
   static const String _promptedKey = 'push_permission_prompted';
   static const String _enabledKey = 'user_notifications_enabled';
@@ -154,11 +154,13 @@ class PushNotificationService {
 
         final notification = message.notification;
         if (notification != null) {
-          showExternal(
-            title: notification.title ?? '',
-            body: notification.body ?? '',
-            payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
-          );
+          if (Platform.isAndroid) {
+            showExternal(
+              title: notification.title ?? '',
+              body: notification.body ?? '',
+              payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
+            );
+          }
         }
       });
 

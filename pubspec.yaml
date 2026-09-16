@@ -2,7 +2,7 @@ name: barav_quiz
 description: "BARAV QUIZ —  باراڤ کویز"
 publish_to: "none"
 
-version: 1.0.0+19
+version: 1.0.0+20
 
 environment:
   sdk: ^3.12.0
