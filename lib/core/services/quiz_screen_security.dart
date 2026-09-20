@@ -21,17 +21,14 @@ class QuizScreenSecurity {
 
   /// چالاککردن لە کاتی کویزی زیندوو.
   static Future<void> enable() async {
-    return; // Disabled for now as requested
-    /*
     if (kIsWeb) return;
     try {
       await _channel.invokeMethod<void>('enable');
       _active = true;
       _listenRecording();
-    } catch (e) {
-      // debugPrint('QuizScreenSecurity.enable failed: $e\n$st');
+    } catch (e, st) {
+      debugPrint('QuizScreenSecurity.enable failed: $e\n$st');
     }
-    */
   }
 
   /// ناکارا کردن دوای جێهێشتنی کویز.
@@ -42,8 +39,8 @@ class QuizScreenSecurity {
       _recordingSub = null;
       await _channel.invokeMethod<void>('disable');
       _active = false;
-    } catch (e) {
-      // debugPrint('QuizScreenSecurity.disable failed: $e\n$st');
+    } catch (e, st) {
+      debugPrint('QuizScreenSecurity.disable failed: $e\n$st');
       _active = false;
     }
   }
@@ -58,5 +55,13 @@ class QuizScreenSecurity {
     }
   }
 
-
+  static void _listenRecording() {
+    if (!Platform.isIOS) return;
+    _recordingSub?.cancel();
+    _recordingSub = _events.receiveBroadcastStream().listen((event) {
+      if (event is bool) {
+        onRecordingChanged?.call(event);
+      }
+    });
+  }
 }
