@@ -11,6 +11,7 @@ import '../../core/routing/transitions.dart';
 import '../auth/login_screen.dart';
 import '../live_quiz/live_quiz_controller.dart';
 import '../live_quiz/live_quiz_host_screen.dart';
+import '../test_quiz/test_quiz_screen.dart';
 import '../../core/services/live_quiz_access_guard.dart';
 import 'notifications_screen.dart';
 import 'widgets/ad_carousel.dart';
@@ -339,6 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
           listenable: Listenable.merge([quizController, session]),
           builder: (context, _) {
             final theme = Theme.of(context);
+            final colors = AppColors.of(context);
             final endedAt = quizController.lastWinnersEndedAt;
             final nowUtc = DateTime.now().toUtc();
             bool isWithin2Minutes = false;
@@ -403,6 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         delay: const Duration(milliseconds: 80),
                         child: AdCarousel(ads: _homeAds),
                       ),
+
                       if (hasWinners) ...[
                         const SizedBox(height: 16),
                         Padding(
@@ -646,6 +649,63 @@ class _HomeScreenState extends State<HomeScreen> {
                           return widgets;
                         }(),
                       ],
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: FadeSlideIn(
+                          delay: const Duration(milliseconds: 150),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(fadeRoute(const TestQuizScreen()));
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppColors.purple.withValues(alpha: 0.1),
+                                border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.purple.withValues(alpha: 0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.science_rounded, color: AppColors.purpleLight),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Test Quiz',
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: colors.ink,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Test yourself with 15 simulated players',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: colors.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.purpleLight),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                     ],
                   );
                 },

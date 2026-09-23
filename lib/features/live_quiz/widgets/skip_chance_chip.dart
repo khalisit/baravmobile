@@ -9,16 +9,18 @@ class SkipChanceChip extends StatelessWidget {
     super.key,
     required this.onTap,
     this.disabled = false,
+    this.overrideSkipCount,
   });
 
   final VoidCallback onTap;
   final bool disabled;
+  final int? overrideSkipCount;
 
   @override
   Widget build(BuildContext context) {
     LocaleScope.of(context);
     final theme = Theme.of(context);
-    final skipCount = SessionController.instance.user?.skip ?? 0;
+    final skipCount = overrideSkipCount ?? SessionController.instance.user?.skip ?? 0;
     final isActuallyDisabled = disabled || skipCount <= 0;
 
     final accent = isActuallyDisabled ? Colors.grey : Colors.amber;
@@ -79,7 +81,7 @@ class SkipChanceChip extends StatelessWidget {
               ),
               const SizedBox(width: 7),
               Text(
-                LocaleController.instance.isSorani ? 'هەلی سکایپ' : 'Derbasbûn',
+                'Skip',
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: accent,
                   fontWeight: FontWeight.w800,

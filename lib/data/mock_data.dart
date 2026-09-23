@@ -31,18 +31,18 @@ abstract final class MockData {
   );
 
   static const List<String> mockPlayerNames = [
-    'ئاریان سەعدی',
-    'ژینۆ ڕەحمان',
-    'دیار حەسەن',
-    'هێمن عومەر',
-    'شێرکۆ ئەحمەد',
-    'ڤیان عەلی',
-    'رۆژین محەمەد',
-    'کاوان نوری',
-    'سۆزان قادر',
-    'بەختیار سەلام',
-    'لانیا فەرهاد',
-    'ڕێباز جەلال',
+    'Alex Carter',
+    'Sarah Jenkins',
+    'David Miller',
+    'Emma Wilson',
+    'Michael Brown',
+    'Olivia Taylor',
+    'James Anderson',
+    'Sophia Davis',
+    'William Evans',
+    'Isabella Thomas',
+    'Liam Wright',
+    'Charlotte Green',
   ];
 
   static const List<AdItem> ads = [
@@ -69,52 +69,48 @@ abstract final class MockData {
   /// کویزی نموونەیی — ٤ پرسیار، هەر یەکە ٤ وەڵام.
   static List<LiveQuestion> get sampleLiveQuestions => const [
         LiveQuestion(
-          text: 'ئەم شوێنە کامەیە؟',
-          imageUrl:
-              'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=900&q=80',
+          text: 'What is the capital of France?',
           options: [
-            QuizOption(text: 'قەڵای هەولێر', isCorrect: true),
-            QuizOption(text: 'قەڵای کەرکوک', isCorrect: false),
-            QuizOption(text: 'تاقوەسانی', isCorrect: false),
-            QuizOption(text: 'هیچیان', isCorrect: false),
+            QuizOption(text: 'Paris', isCorrect: true),
+            QuizOption(text: 'London', isCorrect: false),
+            QuizOption(text: 'Berlin', isCorrect: false),
+            QuizOption(text: 'Rome', isCorrect: false),
           ],
         ),
         LiveQuestion(
-          text: 'پایتەختی هەرێمی کوردستان کام شارە؟',
+          text: 'Which planet is known as the Red Planet?',
           options: [
-            QuizOption(text: 'هەولێر', isCorrect: true),
-            QuizOption(text: 'سلێمانی', isCorrect: false),
-            QuizOption(text: 'ڕانیە', isCorrect: false),
-            QuizOption(text: 'هیچیان', isCorrect: false),
+            QuizOption(text: 'Earth', isCorrect: false),
+            QuizOption(text: 'Mars', isCorrect: true),
+            QuizOption(text: 'Jupiter', isCorrect: false),
+            QuizOption(text: 'Venus', isCorrect: false),
           ],
         ),
         LiveQuestion(
-          text: 'ئەم وێنەیە کام نووسەرە؟',
-          imageUrl:
-              'https://images.unsplash.com/photo-1456513080880-7d93aaa5bb63?w=900&q=80',
+          text: 'What is the largest ocean on Earth?',
           options: [
-            QuizOption(text: 'نالی', isCorrect: false),
-            QuizOption(text: 'ئەحمەدی خانی', isCorrect: true),
-            QuizOption(text: 'مەحوی', isCorrect: false),
-            QuizOption(text: 'هیچیان', isCorrect: false),
+            QuizOption(text: 'Atlantic', isCorrect: false),
+            QuizOption(text: 'Indian', isCorrect: false),
+            QuizOption(text: 'Pacific', isCorrect: true),
+            QuizOption(text: 'Arctic', isCorrect: false),
           ],
         ),
         LiveQuestion(
-          text: 'بەرزترین چیای کوردستان کامەیە؟',
+          text: 'Who wrote the play "Romeo and Juliet"?',
           options: [
-            QuizOption(text: 'چیای قەندیل', isCorrect: false),
-            QuizOption(text: 'چیای هەڵگورد', isCorrect: true),
-            QuizOption(text: 'چیای سەفین', isCorrect: false),
-            QuizOption(text: 'هیچیان', isCorrect: false),
+            QuizOption(text: 'Charles Dickens', isCorrect: false),
+            QuizOption(text: 'William Shakespeare', isCorrect: true),
+            QuizOption(text: 'Mark Twain', isCorrect: false),
+            QuizOption(text: 'Jane Austen', isCorrect: false),
           ],
         ),
         LiveQuestion(
-          text: 'درێژترین ڕووباری عێراق کامەیە؟',
+          text: 'How many legs does a spider have?',
           options: [
-            QuizOption(text: 'دیجلە', isCorrect: false),
-            QuizOption(text: 'زەب', isCorrect: false),
-            QuizOption(text: 'فورات', isCorrect: true),
-            QuizOption(text: 'هیچیان', isCorrect: false),
+            QuizOption(text: '6', isCorrect: false),
+            QuizOption(text: '8', isCorrect: true),
+            QuizOption(text: '10', isCorrect: false),
+            QuizOption(text: '12', isCorrect: false),
           ],
         ),
       ];
